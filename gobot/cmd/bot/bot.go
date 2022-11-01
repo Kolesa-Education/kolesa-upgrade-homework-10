@@ -71,8 +71,10 @@ func (bot *UpgradeBot) AllTaskHandler(ctx telebot.Context) error {
 	result := bot.Tasks.GetAll(ctx.Sender().ID)
 	for result.Next() {
 		bot.Tasks.Db.ScanRows(result, &task)
-		log.Println(task.EndDate)
-		ctx.Send(strconv.Itoa(int(task.ID)) + task.Title + task.Description + strconv.FormatInt(task.EndDate, 10))
+		form_data := strconv.FormatInt(task.EndDate, 10)
+		form_data = form_data[:2] + "." + form_data[2:4] + "." + form_data[4:]
+		res_string := fmt.Sprintf("%s %s %s %s", strconv.Itoa(int(task.ID)), task.Title, task.Description, form_data)
+		ctx.Send(res_string)
 	}
 	return ctx.Send(result)
 }
@@ -81,11 +83,11 @@ func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
 	attempts := ctx.Args()
 
 	if len(attempts) == 0 {
-		return ctx.Send("Вы не ввели ваш вариант")
+		return ctx.Send("Вы не ввели ваш id")
 	}
 
 	if len(attempts) > 1 {
-		return ctx.Send("Вы ввели больше одного варианта")
+		return ctx.Send("Вы ввели больше одного id")
 	} else if len(attempts) == 1 {
 		bot.Tasks.DeleteTask(attempts[0], ctx.Sender().ID)
 	}
