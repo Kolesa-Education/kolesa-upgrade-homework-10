@@ -1,0 +1,3 @@
+Env="local"
+BotToken="5767073993:AAEMw0D3n63cBw1e5MUiKPInFQRqzwOk8zw"
+DSN="root:@tcp(127.0.0.1:3306)/kolesa_tgbot?charset=utf8mb4&parseTime=True&loc=Local"
