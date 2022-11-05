@@ -1,75 +1,78 @@
 package Database
 
 import (
-	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"log"
 	"time"
 )
 
 type User struct {
 	gorm.Model
-	Id         int `gorm:"primaryKey"`
-	TelegramId int64
+	id         int
+	TelegramId int64 `gorm:"primaryKey;column:Telegram_Id"`
 	FirstName  string
 	LastName   string
 	ChatId     int64
-	Tasks      []Task `gorm:"foreignKey:UserId"`
+	Tasks      []Task `gorm:"foreignKey:UserId;references:TelegramId""` //Не потребовалось, возможность для расширения
 }
 
 type Task struct {
 	gorm.Model
-	Id          int `gorm:"primaryKey"`
-	UserId      int
+	Id          int   `gorm:"primaryKey"`
+	UserId      int64 `gorm:"column:User_Id"`
 	Title       string
 	Description string
-	EndDate     time.Time
+	EndDate     time.Time `gorm:"column:End_Date"`
 }
 
 func NewDatabase(dbAddress, dbName, dbUsername, dbPassword string) *gorm.DB {
 	dsn := dbUsername + ":" + dbPassword + "@tcp(" + dbAddress + ")/" + dbName + "?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Error connecting to database: ", err.Error())
 	}
 	return db
 }
 
-func NewUser(database *gorm.DB, telegramId int64, firstName, lastName string, chatId int64) {
-	err := database.Create(&User{
+func NewUser(database *gorm.DB, telegramId int64, firstName, lastName string, chatId int64) error {
+	db := database.Create(&User{
 		TelegramId: telegramId,
 		FirstName:  firstName,
 		LastName:   lastName,
 		ChatId:     chatId,
 	})
-	if err == nil {
-		log.Printf("Created new user:\n" +
-			"\tTelegram ID: %v\n" +
-			"\tFirst Name:")
-	}
-	log.Println(err.Error)
+	return db.Error
 }
 
-func NewTask(database *gorm.DB, userId int, title, description string, endDate time.Time) {
-	database.Create(&Task{
+func NewTask(database *gorm.DB, userId int64, args []string) error {
+	loc, _ := time.LoadLocation("Local")
+	endDate, err := time.ParseInLocation("02.01.2006 15:04", args[2], loc)
+	if err != nil {
+		return err
+	}
+	db := database.Create(&Task{
 		UserId:      userId,
-		Title:       title,
-		Description: description,
+		Title:       args[0],
+		Description: args[1],
 		EndDate:     endDate,
 	})
+	return db.Error
 }
 
-func GetUser(database *gorm.DB, id int) {
+func GetUser(database *gorm.DB, telegramId int) error { //Не потребовалось, возможность для расширения
 	var user User
-	database.Preload("Tasks.User_Id").First(&user, "id = ?", id)
-	println(user.Id, len(user.Tasks))
+	database.Preload("Tasks").First(&user, "Telegram_Id = ?", telegramId)
+	return database.Error
 }
 
-func GetTask(database *gorm.DB, id int) {
-	var task Task
-	database.First(&task, "id = ?", id)
-	fmt.Printf("%v\n", task)
-	println(task.UserId)
+func GetUserTasks(database *gorm.DB, userId int64) ([]Task, error) {
+	var tasks []Task
+	db := database.Find(&tasks, "User_Id = ?", userId)
+	return tasks, db.Error
+}
+
+func DeleteTask(database *gorm.DB, taskId int, userId int64) (int64, error) {
+	db := database.Where("User_Id = ?", userId).Delete(&Task{}, taskId)
+	return db.RowsAffected, db.Error
 }
