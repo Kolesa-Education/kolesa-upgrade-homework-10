@@ -1,0 +1,5 @@
+botToken = ""
+dbAddress = "localhost:3306"
+dbName = "Task_Manager"
+dbUsername = "root"
+dbPassword = ""
