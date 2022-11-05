@@ -34,14 +34,9 @@ func main() {
 		log.Fatalf("Ошибка подключения к БД %v", err)
 	}
 
-	// repo := &models.UserModel{Db: db}
+	log.Println("Connection Established")
 
-	// users, err := repo.GetAll()
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-
-	// fmt.Println(users)
+	db.AutoMigrate(models.User{}, models.Task{})
 
 	upgradeBot := bot.UpgradeBot{
 		Bot:   bot.InitBot(cfg.BotToken),

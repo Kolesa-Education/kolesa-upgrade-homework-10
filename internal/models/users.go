@@ -40,7 +40,7 @@ func (m *UserModel) CreateTask(task Task) error {
 }
 
 func (m *UserModel) DeleteTask(id int) error {
-	result := m.Db.Delete(&User{}, 10)
+	result := m.Db.Delete(&Task{}, id)
 	return result.Error
 }
 

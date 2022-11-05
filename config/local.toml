@@ -1,3 +1,3 @@
 Env="local"
-BotToken="5509507982:AAHNEcfNErUgT-71qk1ENID4Ix0s5Zkcmpk"
+BotToken="your_telegram_token"
 Dsn="upgrade.db"
