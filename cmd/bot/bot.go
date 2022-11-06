@@ -47,7 +47,7 @@ func (bot *TodoBot) HelpHandler(ctx telebot.Context) error {
 	return ctx.Send(
 		"**Список комманд**\n\n" +
 			"Чтобы добавить задачу, введи её в формате\n" +
-			"/add Заголовок; Описание; Дедлайн задачи в формате дд.мм.гггг\n\n" +
+			"/add Заголовок; Описание; Дедлайн задачи в формате дд-мм-гггг\n\n" +
 			"Чтобы получить список своих задач, введи /todos\n\n" +
 			"Чтобы удалить задачу введи /delete <ID задачи>",
 	)
@@ -60,7 +60,7 @@ func (bot *TodoBot) CreateTodoHandler(ctx telebot.Context) error {
 	check := task.CheckTask(taskArgs)
 	if !check {
 		return ctx.Send("Неверный формат!\n" +
-			"Введите задачу в формате: /add Заголовок; Описание; Дедлайн задачи (дд.мм.гггг)")
+			"Введите задачу в формате: /add Заголовок; Описание; Дедлайн задачи (дд-мм-гггг)")
 	}
 
 	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
@@ -69,9 +69,9 @@ func (bot *TodoBot) CreateTodoHandler(ctx telebot.Context) error {
 	}
 
 	newTask := models.Task{
-		Title:       taskArgs[0],
-		Description: taskArgs[1],
-		EndDate:     taskArgs[2],
+		Title:       strings.TrimSpace(taskArgs[0]),
+		Description: strings.TrimSpace(taskArgs[1]),
+		EndDate:     strings.TrimSpace(taskArgs[2]),
 		UserID:      existUser.ID,
 	}
 
@@ -81,7 +81,12 @@ func (bot *TodoBot) CreateTodoHandler(ctx telebot.Context) error {
 		log.Printf("Ошибка создания задачи %v", err)
 	}
 
-	resStr := fmt.Sprintf("Создана задача %s: %s, до %s", newTask.Title, newTask.Description, newTask.EndDate)
+	resStr := fmt.Sprintf(
+		`Создана задача:
+			%s
+			%s
+			до %s`, newTask.Title, newTask.Description, newTask.EndDate,
+	)
 	return ctx.Send(resStr)
 }
 

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +27,6 @@ func (m *TaskModel) FindAll(userId uint) ([]Task, error) {
 	var existTasks []Task
 
 	result := m.Db.Find(&existTasks, Task{UserID: userId})
-	fmt.Println(existTasks)
 
 	if result.Error != nil {
 		return nil, result.Error
