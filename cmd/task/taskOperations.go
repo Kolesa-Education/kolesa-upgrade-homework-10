@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func checkTask(taskArgs []string) bool {
+func CheckTask(taskArgs []string) bool {
 	if len(taskArgs) == 0 {
 		log.Println("Нет аргументов!")
 		return false
@@ -26,4 +26,10 @@ func checkTask(taskArgs []string) bool {
 	}
 
 	return true
+}
+
+func ParseTask(args *[]string) []string {
+	refString := strings.Join(*args, " ")
+
+	return strings.Split(refString, ";")
 }
