@@ -59,7 +59,7 @@ func (bot *UpgradeBot) WriteTaskHandler(ctx telebot.Context) error {
 	err := bot.Tasks.Create(newTask)
 
 	if err != nil {
-		log.Printf("Ошибка создания пользователя %v", err)
+		log.Printf("Ошибка создания задачи %v", err)
 	}
 
 	return ctx.Send("Задача создана, " + ctx.Sender().FirstName)
