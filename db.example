@@ -1,0 +1,24 @@
+create database homework_10;
+
+use homework_10;
+
+create table users (
+    id int NOT NULL PRIMARY KEY auto_increment,
+    name varchar(255),
+    telegram_id int,
+    first_name varchar(255),
+    last_name varchar(255),
+    chat_id int,
+    created_at datetime DEFAULT CURRENT_TIMESTAMP,
+    update_at datetime,
+    deleted_at datetime,
+);
+
+create table tasks (
+    id int NOT NULL auto_increment PRIMARY KEY,
+    user_id int NOT NULL, title varchar(255) NOT NULL,
+    description text,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+    );
