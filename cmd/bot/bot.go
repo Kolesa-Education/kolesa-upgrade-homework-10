@@ -2,10 +2,11 @@ package bot
 
 import (
 	"fmt"
-	"github.com/glenn-brown/golang-pkg-pcre/src/pkg/pcre"
 	"log"
+	"strconv"
 	"strings"
 	"time"
+	"upgrade/cmd/task"
 	"upgrade/internal/models"
 
 	"gopkg.in/telebot.v3"
@@ -16,24 +17,6 @@ type TodoBot struct {
 	Users *models.UserModel
 	Tasks *models.TaskModel
 }
-
-//var winSticker = &telebot.Sticker{
-//	File: telebot.File{
-//		FileID: "CAACAgIAAxkBAAEGMEZjVspD4JulorxoH7nIwco5PGoCsAACJwADr8ZRGpVmnh4Ye-0RKgQ",
-//	},
-//	Width:    512,
-//	Height:   512,
-//	Animated: true,
-//}
-//
-//var loseSticker = &telebot.Sticker{
-//	File: telebot.File{
-//		FileID: "CAACAgIAAxkBAAEGUfFjZnDTpRmHFgABq_zncY60TpKZhlUAAgsBAAIWfGgDjgzxiPsp7OIrBA",
-//	},
-//	Width:    512,
-//	Height:   512,
-//	Animated: true,
-//}
 
 func (bot *TodoBot) StartHandler(ctx telebot.Context) error {
 	newUser := models.User{
@@ -60,11 +43,21 @@ func (bot *TodoBot) StartHandler(ctx telebot.Context) error {
 	return ctx.Send("Привет, " + ctx.Sender().FirstName)
 }
 
+func (bot *TodoBot) HelpHandler(ctx telebot.Context) error {
+	return ctx.Send(
+		"**Список комманд**\n\n" +
+			"Чтобы добавить задачу, введи её в формате\n" +
+			"/add Заголовок; Описание; Дедлайн задачи в формате дд.мм.гггг\n\n" +
+			"Чтобы получить список своих задач, введи /todos\n\n" +
+			"Чтобы удалить задачу введи /delete <ID задачи>",
+	)
+}
+
 func (bot *TodoBot) CreateTodoHandler(ctx telebot.Context) error {
 	taskArgs := ctx.Args()
-	taskArgs = parseTask(&taskArgs)
+	taskArgs = task.ParseTask(&taskArgs)
 
-	check := checkTask(taskArgs)
+	check := task.CheckTask(taskArgs)
 	if !check {
 		return ctx.Send("Неверный формат!\n" +
 			"Введите задачу в формате: /add Заголовок; Описание; Дедлайн задачи (дд.мм.гггг)")
@@ -92,42 +85,69 @@ func (bot *TodoBot) CreateTodoHandler(ctx telebot.Context) error {
 	return ctx.Send(resStr)
 }
 
-func checkTask(taskArgs []string) bool {
-	if len(taskArgs) == 0 {
-		log.Println("Нет аргументов!")
-		return false
+func (bot *TodoBot) GetAllTodosHandler(ctx telebot.Context) error {
+	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
+	if err != nil {
+		log.Printf("Ошибка получения пользователя %v", err)
 	}
 
-	if len(taskArgs) < 3 {
-		log.Println("Слишком мало аргументов")
-		return false
+	tasks, err := bot.Tasks.FindAll(existUser.ID)
+	if err != nil {
+		log.Printf("Ошибка получения задач %v", err)
 	}
 
-	regexpDate := pcre.MustCompile(`^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$`, 0)
-	match := regexpDate.MatcherString(taskArgs[2], 0).Matches()
-
-	if !match {
-		log.Println("Не прошла проверка по регулярке")
-		return false
-	}
-
-	return true
-}
-
-func parseTask(args *[]string) []string {
-	refString := strings.Join(*args, "")
-
-	return strings.Split(refString, ";")
-}
-
-func (bot *TodoBot) HelpHandler(ctx telebot.Context) error {
-	return ctx.Send(
-		"**Список комманд**\n\n" +
-			"Чтобы добавить задачу, введи её в формате\n" +
-			"/add Заголовок; Описание; Дедлайн задачи в формате дд.мм.гггг\n\n" +
-			"Чтобы получить список своих задач, введи /todos\n\n" +
-			"Чтобы удалить задачу введи /delete <id задачи>",
+	var (
+		taskSlice []string
+		str       string
 	)
+
+	for _, taskItem := range tasks {
+		str = fmt.Sprintf(
+			`ID: %d
+					Задача: %s
+					Описание: %s
+					Дедлайн: %s`,
+			taskItem.ID,
+			taskItem.Title,
+			taskItem.Description,
+			taskItem.EndDate,
+		)
+		taskSlice = append(taskSlice, str)
+	}
+
+	resString := strings.Join(taskSlice, "\n\n")
+
+	return ctx.Send(resString)
+}
+
+func (bot *TodoBot) DeleteTodoHandler(ctx telebot.Context) error {
+	taskArg := ctx.Args()
+
+	if len(taskArg) == 0 {
+		return ctx.Send("Вы не ввели ID задачи")
+	}
+
+	if len(taskArg) > 1 {
+		return ctx.Send("Неверные данные, введите ID задачи" +
+			"Чтобы посмотреть ID нужной задачи, введите /todos")
+	}
+
+	//existUser, err := bot.Users.FindOne(ctx.Chat().ID)
+	//if err != nil {
+	//	log.Printf("Ошибка получения пользователя %v", err)
+	//}
+
+	taskID, err := strconv.Atoi(taskArg[0])
+	if err != nil {
+		log.Printf("Ошибка удаления задачи. Неверный ID %v", err)
+	}
+
+	err = bot.Tasks.DeleteOne(taskID)
+	if err != nil {
+		log.Printf("Ошибка удаления задачи %v", err)
+	}
+
+	return ctx.Send(fmt.Sprintf("Задача #%d удалена", taskID))
 }
 
 func InitBot(token string) *telebot.Bot {

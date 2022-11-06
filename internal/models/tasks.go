@@ -1,6 +1,9 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"fmt"
+	"gorm.io/gorm"
+)
 
 type Task struct {
 	gorm.Model
@@ -21,14 +24,23 @@ func (m *TaskModel) Create(task Task) error {
 	return result.Error
 }
 
-func (m *TaskModel) FindAll(userId int64) (*Task, error) {
-	tasks := Task{}
+func (m *TaskModel) FindAll(userId uint) ([]Task, error) {
+	var existTasks []Task
 
-	result := m.Db.Preload("Tasks").Find(&tasks, userId)
+	result := m.Db.Find(&existTasks, Task{UserID: userId})
+	fmt.Println(existTasks)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
-	return &tasks, nil
+	return existTasks, nil
+}
+
+func (m *TaskModel) DeleteOne(taskID int) error {
+	existTask := Task{}
+
+	result := m.Db.Delete(&existTask, taskID)
+
+	return result.Error
 }

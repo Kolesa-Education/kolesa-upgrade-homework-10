@@ -37,11 +37,14 @@ func main() {
 	todoBot := bot.TodoBot{
 		Bot:   bot.InitBot(cfg.BotToken),
 		Users: &models.UserModel{Db: db},
+		Tasks: &models.TaskModel{Db: db},
 	}
 
 	todoBot.Bot.Handle("/start", todoBot.StartHandler)
 	todoBot.Bot.Handle("/help", todoBot.HelpHandler)
 	todoBot.Bot.Handle("/add", todoBot.CreateTodoHandler)
+	todoBot.Bot.Handle("/todos", todoBot.GetAllTodosHandler)
+	todoBot.Bot.Handle("/delete", todoBot.DeleteTodoHandler)
 
 	todoBot.Bot.Start()
 }
