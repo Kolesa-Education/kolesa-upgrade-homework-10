@@ -9,6 +9,7 @@ type User struct {
 	FirstName  string `json:"first_name,omitempty"`
 	LastName   string `json:"last_name,omitempty"`
 	ChatId     int64  `json:"chat_id,omitempty"`
+	Tasks      []Task `gorm:"foreignKey:UserID"`
 }
 
 type UserModel struct {
