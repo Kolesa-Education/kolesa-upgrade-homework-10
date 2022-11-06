@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -9,6 +11,7 @@ type User struct {
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	ChatId     int64  `json:"chat_id"`
+	Tasks []Task
 }
 
 type UserModel struct {
@@ -24,8 +27,9 @@ func (m *UserModel) Create(user User) error {
 
 func (m *UserModel) FindOne(telegramId int64) (*User, error) {
 	existUser := User{}
-
-	result := m.Db.First(&existUser, User{TelegramId: telegramId})
+	//    err := db.Model(&User{}).Preload("CreditCards").Find(&users).Error
+	result := m.Db.Preload("Tasks").Find(&existUser, User{TelegramId: telegramId})
+		
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -33,3 +37,5 @@ func (m *UserModel) FindOne(telegramId int64) (*User, error) {
 
 	return &existUser, nil
 }
+
+
