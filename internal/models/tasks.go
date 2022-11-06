@@ -6,11 +6,11 @@ import (
 
 type Task struct {
 	gorm.Model
-	ID          int64  `json:"id,omitempty" gorm:"primaryKey:id"`
+	ID          uint   `json:"id,omitempty" gorm:"primaryKey:id"`
 	Title       string `json:"title,omitempty"`
 	Description string `json:"description,omitempty"`
 	EndDate     string `json:"end_date,omitempty"`
-	UserID      int64
+	UserID      uint
 }
 
 type TaskModel struct {
@@ -22,7 +22,7 @@ func (m *TaskModel) Create(task Task) error {
 	return result.Error
 }
 
-func (m *TaskModel) FindOne(id int64) (*Task, error) {
+func (m *TaskModel) FindOne(id uint) (*Task, error) {
 	t := Task{}
 	result := m.Db.First(&t, Task{ID: id})
 	if result.Error != nil {

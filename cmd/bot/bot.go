@@ -3,6 +3,8 @@ package bot
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/telebot.v3"
@@ -38,14 +40,49 @@ func (b *UpgradeBot) StartHandler(ctx telebot.Context) error {
 	return ctx.Send("Привет, " + ctx.Sender().FirstName)
 }
 
-//func (b *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
-//	ctx.Reply("Введите название задачи")
-//	fmt.Println(ctx.Data())
-//	telewa
-//	ctx.Reply("Введите описание задачи")
-//	fmt.Println(ctx.Data())
-//	return ctx.Send("done")
-//}
+func (b *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
+	args := ctx.Args()
+	if len(args) != 3 {
+		msg := fmt.Sprintf("/addTask Название; Описание; Дедлайн;")
+		ctx.Send(msg)
+		return ctx.Send("Неверное количество аргументов для создания задачи. Нужно 3")
+	}
+	args = strings.Split(strings.Join(args, " "), ";")
+	user, err := b.Users.FindOne(ctx.Chat().ID)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	t := models.Task{
+		Title:       args[0],
+		Description: args[1],
+		EndDate:     args[2],
+		UserID:      user.ID,
+	}
+	b.Users.Db.Model(&user).Association("Tasks").Append([]models.Task{
+		t,
+	})
+	return ctx.Send("Запись создана")
+}
+
+func (b *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
+	id := ctx.Data()
+	deleteId, err := strconv.Atoi(id)
+	if err != nil || deleteId < 1 {
+		ctx.Send("/deleteTask {id}")
+		return ctx.Send("Неверный id")
+	}
+	user, err := b.Users.FindOne(ctx.Chat().ID)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	t := models.Task{
+		ID: uint(deleteId),
+	}
+	b.Users.Db.Model(&user).Association("Tasks").Delete([]models.Task{t})
+	return ctx.Send("Запись удалена")
+}
 
 func (b *UpgradeBot) TasksHandler(ctx telebot.Context) error {
 	user, err := b.Users.FindOne(ctx.Chat().ID)
@@ -53,7 +90,7 @@ func (b *UpgradeBot) TasksHandler(ctx telebot.Context) error {
 		log.Printf("Пользователь %s зарегистрирован", ctx.Sender().Username)
 	}
 	var tasks []models.Task
-	b.Tasks.Db.Model(&user).Association("Tasks").Find(&tasks)
+	b.Users.Db.Model(&user).Association("Tasks").Find(&tasks)
 	if len(tasks) == 0 {
 		return ctx.Send("У вас нет задач")
 	}
