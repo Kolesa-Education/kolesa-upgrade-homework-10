@@ -32,10 +32,18 @@ func main() {
 		log.Fatalf("Ошибка подключения к БД %v", err)
 	}
 
+	err = db.AutoMigrate(models.User{}, models.Task{})
+	if err != nil {
+		log.Fatalf("Ошибка миграции %v", err)
+	}
+
 	upgradeBot := bot.UpgradeBot{
 		Bot:   bot.InitBot(cfg.BotToken),
 		Users: &models.UserModel{Db: db},
+		Tasks: &models.TaskModel{Db: db},
 	}
 	upgradeBot.Bot.Handle("/start", upgradeBot.StartHandler)
+	//upgradeBot.Bot.Handle("/addTask", upgradeBot.AddTaskHandler)
+	upgradeBot.Bot.Handle("/tasks", upgradeBot.TasksHandler)
 	upgradeBot.Bot.Start()
 }

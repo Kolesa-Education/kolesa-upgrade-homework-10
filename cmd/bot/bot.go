@@ -11,6 +11,7 @@ import (
 type UpgradeBot struct {
 	Bot   *telebot.Bot
 	Users *models.UserModel
+	Tasks *models.TaskModel
 }
 
 func (b *UpgradeBot) StartHandler(ctx telebot.Context) error {
@@ -24,7 +25,7 @@ func (b *UpgradeBot) StartHandler(ctx telebot.Context) error {
 
 	user, err := b.Users.FindOne(ctx.Chat().ID)
 	if err != nil {
-		log.Printf("Пользователь %s зарегестрирован", ctx.Sender().Username)
+		log.Printf("Пользователь %s зарегистрирован", ctx.Sender().Username)
 	}
 
 	if user == nil {
@@ -34,6 +35,26 @@ func (b *UpgradeBot) StartHandler(ctx telebot.Context) error {
 		}
 	}
 	return ctx.Send("Привет, " + ctx.Sender().FirstName)
+}
+
+//func (b *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
+//	ctx.Reply("Введите название задачи")
+//	fmt.Println(ctx.Data())
+//	telewa
+//	ctx.Reply("Введите описание задачи")
+//	fmt.Println(ctx.Data())
+//	return ctx.Send("done")
+//}
+
+func (b *UpgradeBot) TasksHandler(ctx telebot.Context) error {
+	user, err := b.Users.FindOne(ctx.Chat().ID)
+	if err != nil {
+		log.Printf("Пользователь %s зарегестрирован", ctx.Sender().Username)
+	}
+	var tasks []models.Task
+	b.Tasks.Db.Model(&user).Association("Tasks").Find(&tasks)
+	log.Println(tasks)
+	return ctx.Send("ABOBa")
 }
 
 func InitBot(token string) *telebot.Bot {
