@@ -18,7 +18,7 @@ type Config struct {
 }
 
 func main() {
-	configPath := flag.String("config", "", "Path to config file")
+	configPath := flag.String("config", "./config/local.toml", "Path to config file")
 	flag.Parse()
 
 	cfg := &Config{}

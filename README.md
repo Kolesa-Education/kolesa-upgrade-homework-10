@@ -1,15 +1,5 @@
 # kolesa-upgrade-homework-10
 
-### Домашнее задание для лекции "Web-сервис на go". 
-
-[Ссылка на веб-сервис сделанный на лекции](https://github.com/Kolesa-Education/go-telegram-bot)
-
-****
-
-### Срок до 7 ноября 2022г. 18:00
-
-****
-
 ### Задача
 Создать телеграм-бота планеровщика, который умеет сохранять пользователя и его задачи в БД и отдавать при запросе
 
@@ -37,7 +27,10 @@
 
 По желанию можно подключить БД Sqlite или Mysql
 
-## Полезные ссылки
-- [Документация API Telegram](https://core.telegram.org/bots/api)
-- [BotFather](https://t.me/BotFather)
-- [Документация gorm](https://gorm.io/docs/query.html)
+## Запуск
+
+Сначала создайте токен телеграм бота с помощью BotFather и добавьте в env файл `config/local.toml`. Затем запустите программу:
+
+```bash
+  go run main.go
+```
