@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -49,11 +50,22 @@ func (b *UpgradeBot) StartHandler(ctx telebot.Context) error {
 func (b *UpgradeBot) TasksHandler(ctx telebot.Context) error {
 	user, err := b.Users.FindOne(ctx.Chat().ID)
 	if err != nil {
-		log.Printf("Пользователь %s зарегестрирован", ctx.Sender().Username)
+		log.Printf("Пользователь %s зарегистрирован", ctx.Sender().Username)
 	}
 	var tasks []models.Task
 	b.Tasks.Db.Model(&user).Association("Tasks").Find(&tasks)
-	log.Println(tasks)
+	if len(tasks) == 0 {
+		return ctx.Send("У вас нет задач")
+	}
+	for _, task := range tasks {
+		msg := fmt.Sprintf("Задача %v\nНазвание: %s\nОписание: %s\nДедлайн: %v",
+			task.ID,
+			task.Title,
+			task.Description,
+			task.EndDate,
+		)
+		ctx.Send(msg)
+	}
 	return ctx.Send("ABOBa")
 }
 
