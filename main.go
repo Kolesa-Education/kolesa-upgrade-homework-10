@@ -40,7 +40,8 @@ func main() {
 	}
 
 	todoBot.Bot.Handle("/start", todoBot.StartHandler)
-	todoBot.Bot.Handle("/todos", todoBot.CreateTodoHandler)
+	todoBot.Bot.Handle("/help", todoBot.HelpHandler)
+	todoBot.Bot.Handle("/add", todoBot.CreateTodoHandler)
 
 	todoBot.Bot.Start()
 }
