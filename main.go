@@ -42,6 +42,10 @@ func main() {
 
 	upgradeBot.Bot.Handle("/start", upgradeBot.StartHandler)
 	upgradeBot.Bot.Handle("/addTask", upgradeBot.AddTaskHandler)
+	upgradeBot.Bot.Handle("/taskName", upgradeBot.AddTaskNameHandler)
+	upgradeBot.Bot.Handle("/taskDesc", upgradeBot.AddTaskDescriptionHandler)
+	upgradeBot.Bot.Handle("/taskEndDate", upgradeBot.AddTaskEndDateHandler)
+	upgradeBot.Bot.Handle("/endTaskCreation", upgradeBot.EndTaskCreationHandler)
 	upgradeBot.Bot.Handle("/tasks", upgradeBot.GetUserTasksHandler)
 	upgradeBot.Bot.Handle("/deleteTask", upgradeBot.DeleteTaskHandler)
 

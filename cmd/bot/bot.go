@@ -16,6 +16,14 @@ type UpgradeBot struct {
 	Tasks *models.TaskModel
 }
 
+type NewTask struct {
+	Title string
+	Desc string
+	EndDate time.Time
+}
+
+var task = NewTask{}
+
 func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 	newUser := models.User{
 		Name:       ctx.Sender().Username,
@@ -43,41 +51,74 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 }
 
 func (bot *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
-	//ctx.Send("Введите имя задачи:")
+	ctx.Send("Введите имя задачи с помощью команды: /taskName имя_задачи")
+
+	return nil
+}
+
+func (bot *UpgradeBot) AddTaskNameHandler(ctx telebot.Context) error {
+	taskTitle := ctx.Args()
+
+	if len(taskTitle) == 0 { 
+		return ctx.Send("Вы не ввели ваш вариант")
+	}
+
+	task.Title = taskTitle[0]
 	
-	taskTitle := ctx.Reply("Введите имя задачи:")
-	fmt.Println(taskTitle)
+	return ctx.Send("Введите описание задачи с помощью команды: /taskDesc описание_задачи")
+}
 
-	//if len(taskTitle) == 0 {
-	//	return ctx.Send("Вы не ввели ваш вариант")
-	//} else {
-	//	ctx.Send(taskTitle)
-	//}
+func (bot *UpgradeBot) AddTaskDescriptionHandler(ctx telebot.Context) error {
+	taskDesc := ctx.Args()
 
-	//ctx.Send("Введите описание задачи:")
-	//taskDesc := ctx.Args()
-	//
-	//ctx.Send("Введите дедлайн задачи:")
-	//taskEndDate := ctx.Args()
-	//
-	//ctx.Send(taskTitle)
-	//ctx.Send(taskDesc)
-	//ctx.Send(taskEndDate)
-	//newTask := models.User{
-	//	Title:       ctx.Sender().Username,
-	//	Description: ctx.Chat().ID,
-	//	UserId:  ctx.Sender().FirstName,
-	//	EndDate:   ctx.Sender().LastName,
-	//	//ChatId:     ctx.Chat().ID,
-	//}
-	//
-	//err := bot.Users.Create(newTask)
-	//
-	//if err != nil {
-	//	log.Printf("Ошибка создания пользователя %v", err)
-	//}
+	if len(taskDesc) == 0 { 
+		return ctx.Send("Вы не ввели ваш вариант")
+	}
+	
+	task.Desc = taskDesc[0]
 
-	return ctx.Send("Test")
+	return ctx.Send("Введите дату завершения задачи с помощью команды: /taskEndDate YYYY-MM-DD")
+}
+
+func (bot *UpgradeBot) AddTaskEndDateHandler(ctx telebot.Context) error {
+	taskEndDate := ctx.Args()
+
+	if len(taskEndDate) == 0 { 
+		return ctx.Send("Вы не ввели ваш вариант")
+	}
+	
+	date, error := time.Parse("2006-01-02", taskEndDate[0])
+
+	if error != nil {
+        panic(error)
+    }
+
+	task.EndDate = date
+
+	return ctx.Send("Введите /endTaskCreation чтобы завершить добавление задачи")
+}
+
+func (bot *UpgradeBot) EndTaskCreationHandler(ctx telebot.Context) error {
+	user, _ := bot.Users.FindOne(ctx.Chat().ID)
+
+	if len(task.Title) == 0 || len(task.Desc) == 0 || task.EndDate.IsZero() {
+		return ctx.Send("Не все необходимые данные заполнены")
+	}
+
+	newTask := models.Task{
+		Title:       task.Title,
+		Description: task.Desc,
+		EndDate: task.EndDate,
+		UserId: uint(user.ID),
+	}
+
+	err := bot.Tasks.Create(newTask)
+
+	if err != nil {
+		log.Printf("Ошибка создания пользователя %v", err)
+	}
+
+	return ctx.Send("Задача добавлена")
 }
 
 func (bot *UpgradeBot) GetUserTasksHandler(ctx telebot.Context) error {
