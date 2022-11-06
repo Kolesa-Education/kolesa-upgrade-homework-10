@@ -18,8 +18,8 @@ type Config struct {
 func main() {
 	cfg := readConfig()
 	database := Database.NewDatabase(cfg.DbAddress, cfg.DbName, cfg.DbUsername, cfg.DbPassword)
-	if database.Error != nil {
-		log.Fatal("Error connecting to database:", database.Error)
+	if database.Connection.Error != nil {
+		log.Fatal("Error connecting to database:", database.Connection.Error)
 	}
 	tgBot := Bot.Bot{
 		Bot:      Bot.InitBot(cfg.BotToken),

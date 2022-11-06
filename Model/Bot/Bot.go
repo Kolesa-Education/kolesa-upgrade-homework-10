@@ -2,7 +2,6 @@ package Bot
 
 import (
 	"gopkg.in/telebot.v3"
-	"gorm.io/gorm"
 	"log"
 	"regexp"
 	"strconv"
@@ -12,7 +11,7 @@ import (
 )
 
 type Bot struct {
-	Database *gorm.DB
+	Database *Database.Database
 	Bot      *telebot.Bot
 }
 
@@ -32,7 +31,7 @@ func InitBot(token string) *telebot.Bot {
 }
 
 func (bot *Bot) StartHandler(ctx telebot.Context) error {
-	db := Database.NewUser(bot.Database, ctx.Sender().ID, ctx.Sender().FirstName, ctx.Sender().LastName, ctx.Chat().ID)
+	db := bot.Database.NewUser(ctx.Sender().ID, ctx.Sender().FirstName, ctx.Sender().LastName, ctx.Chat().ID)
 	if db != nil {
 		log.Println("Error creating user:", db.Error())
 	}
@@ -41,7 +40,7 @@ func (bot *Bot) StartHandler(ctx telebot.Context) error {
 
 func (bot *Bot) ShowTasks(ctx telebot.Context) error {
 	var result = "Tasks:\n"
-	tasks, err := Database.GetUserTasks(bot.Database, ctx.Sender().ID)
+	tasks, err := bot.Database.GetUserTasks(ctx.Sender().ID)
 	if err != nil {
 		return ctx.Send("Oops, something went wrong: Error getting tasks")
 	}
@@ -67,7 +66,7 @@ func (bot *Bot) NewTask(ctx telebot.Context) error {
 	if _, err := time.Parse("02.01.2006 15:04", args[2]); err != nil {
 		return ctx.Send("Date must be in format: DD.MM.YYYY HH:mm")
 	}
-	err := Database.NewTask(bot.Database, ctx.Sender().ID, args)
+	err := bot.Database.NewTask(ctx.Sender().ID, args)
 	if err != nil {
 		return ctx.Send("Error creating new task")
 	}
@@ -85,7 +84,7 @@ func (bot *Bot) DeleteTask(ctx telebot.Context) error {
 	if ParseErr != nil {
 		return ctx.Send("Define task ID to delete")
 	}
-	rowsAffected, err := Database.DeleteTask(bot.Database, taskId, ctx.Sender().ID)
+	rowsAffected, err := bot.Database.DeleteTask(taskId, ctx.Sender().ID)
 	if err != nil || rowsAffected == 0 {
 		return ctx.Send("Unable to delete task with ID: " + ctx.Args()[0])
 	}
