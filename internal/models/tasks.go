@@ -25,8 +25,12 @@ func (m *TaskModel) Create(task Task) error {
     return result.Error
 }
 
-func (m *TaskModel) Delete(id string) error {
-    result := m.Db.Unscoped().Delete(&Task{}, id)
+func (m *TaskModel) Delete(id string, delType DelType) error {
+    db := m.Db
+    if delType == Permanent {
+        db = db.Unscoped()
+    }
+    result := db.Delete(&Task{}, id)
     return result.Error
 }
 

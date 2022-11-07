@@ -5,38 +5,15 @@ import (
     "time"
     "upgrade/internal/models"
     "strconv"
-
     "gopkg.in/telebot.v3"
 )
+
 
 type UpgradeBot struct {
     Bot   *telebot.Bot
     Users *models.UserModel
     Tasks *models.TaskModel
-}
-
-var gameItems = [3]string{
-    "камень",
-    "ножницы",
-    "бумага",
-}
-
-var winSticker = &telebot.Sticker{
-    File: telebot.File{
-        FileID: "CAACAgIAAxkBAAEGMEZjVspD4JulorxoH7nIwco5PGoCsAACJwADr8ZRGpVmnh4Ye-0RKgQ",
-    },
-    Width:    512,
-    Height:   512,
-    Animated: true,
-}
-
-var loseSticker = &telebot.Sticker{
-    File: telebot.File{
-        FileID: "CAACAgIAAxkBAAEGMEhjVsqoRriJRO_d-hrqguHNlLyLvQACogADFkJrCuweM-Hw5ackKgQ",
-    },
-    Width:    512,
-    Height:   512,
-    Animated: true,
+    AddTaskState models.AddTaskState
 }
 
 func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
@@ -66,32 +43,8 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 }
 
 func (bot *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
-    endDate, err := time.Parse("2006-01-02", "2018-01-20")
-    if err != nil {
-        log.Printf("Ошибка в дате %v", err)
-    }
-    newTask := models.Task{
-        Name:       "Aaaaa",
-        EndDate:    endDate,
-        UserID:     335271283,
-    }
-    
-    existUser, err := bot.Users.FindOne(335271283)
-    
-
-    if err != nil {
-        log.Printf("Ошибка получения пользователя %v", err)
-    }
-
-    if existUser != nil {
-        err := bot.Tasks.Create(newTask)
-
-        if err != nil {
-            log.Printf("Ошибка создания пользователя %v", err)
-        }
-    }
-
-    return ctx.Send("Done")
+    bot.AddTaskState.CurrentState = models.Name
+    return ctx.Send("Введите имя задачи...")
 }
 
 
@@ -102,7 +55,7 @@ func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
         return ctx.Send("Ошибка. Нужно ввести ID задания...")
     }
     for _, id := range args{
-        err := bot.Tasks.Delete(id)
+        err := bot.Tasks.Delete(id, models.Standart)
         if err != nil{
             return ctx.Send("Ошибка с ID:" + id)
         }
@@ -111,16 +64,20 @@ func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
 }
 
 func (bot *UpgradeBot) GetTasksHandler(ctx telebot.Context) error {
-    existUser, err := bot.Users.FindOne(335271283)
+    existUser, err := bot.Users.FindOne(ctx.Chat().ID)
     result := ""
     if err != nil {
         log.Printf("Ошибка получения пользователя %v", err)
     }
 
     if existUser != nil {
-        tasks, err := bot.Tasks.FindByUserId(335271283)
+        tasks, err := bot.Tasks.FindByUserId(ctx.Chat().ID)
         if err != nil {
             return ctx.Send("Возникла ошибка при выводе задач...")
+        }
+        log.Printf(strconv.Itoa(len(*tasks)))
+        if len(*tasks) == 0{
+            return ctx.Send("No Tasks...")
         }
         for i, task := range *tasks {
             formatedDate := task.EndDate.Format("01/02/2006")
@@ -130,6 +87,47 @@ func (bot *UpgradeBot) GetTasksHandler(ctx telebot.Context) error {
     }
 
     return ctx.Send(result)
+}
+
+
+func (bot *UpgradeBot) GeneralHandler(ctx telebot.Context) error {
+    var result error
+    addTaskResult := bot.AddTaskState.HandleState(ctx)
+    switch addTaskResult {
+    case "Action::Add":
+        endDate, _ := time.Parse("01/02/2006", bot.AddTaskState.Storage["endDate"])
+        newTask := models.Task{
+            Name:       bot.AddTaskState.Storage["name"],
+            EndDate:    endDate,
+            UserID:     uint(ctx.Chat().ID),
+        }
+        return ctx.Send(addTask(newTask, bot, ctx))
+    case "":
+        result = nil
+    default:
+        return ctx.Send(addTaskResult)
+    }
+
+        
+
+
+    return result
+}
+
+func addTask(task models.Task, bot *UpgradeBot, ctx telebot.Context)string{
+    existUser, err := bot.Users.FindOne(ctx.Chat().ID)
+    if err != nil {
+        return "Ошибка получения пользователя"
+    }
+    if existUser != nil {
+        err := bot.Tasks.Create(task)
+
+        if err != nil {
+            return "Ошибка создания пользователя"
+        }
+        return "Успешно!"
+    }
+    return "Пользователя нет в базе"
 }
 
 func InitBot(token string) *telebot.Bot {
