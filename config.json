@@ -1,0 +1,8 @@
+{
+    "bot": {
+        "token": "5775326254:AAETh7tvpwL5DP-vDBY-StjBnen0ANKqqiA"
+    },
+    "gorm": {
+        "dsn": "tasker.db"
+    }
+}
