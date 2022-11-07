@@ -1,0 +1,4 @@
+Env="local"
+BotToken="5620959881:AAGJne3K5XYMEZ-voRU8QoK3sA-u0RaSaYA"
+Dsn="upgrade.db"
+Dsn2="tasks.db"
