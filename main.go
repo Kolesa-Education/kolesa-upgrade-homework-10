@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/BurntSushi/toml"
-	"gopkg.in/telebot.v3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"upgrade/cmd/bot"
@@ -44,9 +43,6 @@ func main() {
 		Tasks: &models.TaskModel{Db: db},
 	}
 	upgradeBot.Bot.Handle("/start", upgradeBot.StartHandler)
-	upgradeBot.Bot.Handle("/", func(context telebot.Context) error {
-		return context.Send("ABOBA")
-	})
 	upgradeBot.Bot.Handle("/addTask", upgradeBot.AddTaskHandler)
 	upgradeBot.Bot.Handle("/tasks", upgradeBot.TasksHandler)
 	upgradeBot.Bot.Handle("/deleteTask", upgradeBot.DeleteTaskHandler)
