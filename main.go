@@ -56,7 +56,7 @@ func main() {
     upgradeBot.Bot.Handle("/start", upgradeBot.StartHandler)
     upgradeBot.Bot.Handle("/addTask", upgradeBot.AddTaskHandler)
     upgradeBot.Bot.Handle("/getTasks", upgradeBot.GetTasksHandler)
-    upgradeBot.Bot.Handle("/deleteTask", upgradeBot.DeleteTaskHandler)
+    upgradeBot.Bot.Handle("/deleteTasks", upgradeBot.DeleteTaskHandler)
     upgradeBot.Bot.Handle(telebot.OnText, upgradeBot.GeneralHandler)
 
     upgradeBot.Bot.Start()

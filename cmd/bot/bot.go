@@ -52,6 +52,7 @@ func (bot *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
 
 func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
     args := ctx.Args()
+    errorTasks := []string{}
 
     if len(args) == 0 {
         return ctx.Send("Ошибка. Нужно ввести ID задания...")
@@ -59,7 +60,7 @@ func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
     for _, id := range args{
         err := bot.Tasks.Delete(id, models.Standart)
         if err != nil{
-            return ctx.Send("Ошибка с ID:" + id)
+            errorTasks = append(errorTasks, id)
         }
     }
     return ctx.Send("Done")
