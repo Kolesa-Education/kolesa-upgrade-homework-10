@@ -6,6 +6,8 @@ import (
     "upgrade/internal/models"
     "strconv"
     "gopkg.in/telebot.v3"
+    "errors"
+    "strings"
 )
 
 
@@ -63,9 +65,15 @@ func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
     return ctx.Send("Done")
 }
 
+
+func (bot *UpgradeBot) deleteTask(ctx telebot.Context) error {
+    args := strings.Split(ctx.Data(), "::")
+    bot.Tasks.Delete(args[1], models.Standart)
+    return ctx.Delete()
+}
+
 func (bot *UpgradeBot) GetTasksHandler(ctx telebot.Context) error {
     existUser, err := bot.Users.FindOne(ctx.Chat().ID)
-    result := ""
     if err != nil {
         log.Printf("Ошибка получения пользователя %v", err)
     }
@@ -75,18 +83,30 @@ func (bot *UpgradeBot) GetTasksHandler(ctx telebot.Context) error {
         if err != nil {
             return ctx.Send("Возникла ошибка при выводе задач...")
         }
-        log.Printf(strconv.Itoa(len(*tasks)))
         if len(*tasks) == 0{
             return ctx.Send("No Tasks...")
         }
-        for i, task := range *tasks {
+        for _, task := range *tasks {
+            result := ""
             formatedDate := task.EndDate.Format("01/02/2006")
-            result += strconv.Itoa(i+1) + ". " + task.Name + " | " + formatedDate+ "\n"
+            taskId := strconv.FormatUint(uint64(task.ID), 10)
+            result += taskId + ". " + task.Name
+            result += "EndDate: " + formatedDate + " \n"
+            menu := &telebot.ReplyMarkup{}
+            btn := menu.Data("Delete item "+taskId, "delete"+taskId, "delete::"+taskId)
+            bot.Bot.Handle(&btn, bot.deleteTask)
+            menu.Inline(
+                menu.Row(btn),
+            )
+            err := ctx.Send(result, menu)
+            if err != nil{
+                return err
+            }
         }
+        return nil
 
     }
-
-    return ctx.Send(result)
+    return errors.New("No such users")
 }
 
 
