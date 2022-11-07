@@ -22,6 +22,10 @@ type NewTask struct {
 	EndDate time.Time
 }
 
+var isTaskTitleSet = false
+var isTaskDescSet = false
+var isTaskEndDateSet = false
+
 var task = NewTask{}
 
 func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
@@ -69,6 +73,10 @@ func (bot *UpgradeBot) AddTaskNameHandler(ctx telebot.Context) error {
 }
 
 func (bot *UpgradeBot) AddTaskDescriptionHandler(ctx telebot.Context) error {
+	if len(task.Title) == 0 {
+		return ctx.Send("Вы не ввели имя задачи")
+	}
+	
 	taskDesc := ctx.Args()
 
 	if len(taskDesc) == 0 { 
@@ -81,6 +89,14 @@ func (bot *UpgradeBot) AddTaskDescriptionHandler(ctx telebot.Context) error {
 }
 
 func (bot *UpgradeBot) AddTaskEndDateHandler(ctx telebot.Context) error {
+	if len(task.Desc) == 0 {
+		return ctx.Send("Вы не ввели описание задачи")
+	}
+
+	if len(task.Title) == 0 {
+		return ctx.Send("Вы не ввели имя задачи")
+	}
+	
 	taskEndDate := ctx.Args()
 
 	if len(taskEndDate) == 0 { 
