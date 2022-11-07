@@ -95,8 +95,24 @@ func (bot *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
 }
 
 
+func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
+    args := ctx.Args()
+
+    if len(args) == 0 {
+        return ctx.Send("Ошибка. Нужно ввести ID задания...")
+    }
+    for _, id := range args{
+        err := bot.Tasks.Delete(id)
+        if err != nil{
+            return ctx.Send("Ошибка с ID:" + id)
+        }
+    }
+    return ctx.Send("Done")
+}
+
 func (bot *UpgradeBot) GetTasksHandler(ctx telebot.Context) error {
     existUser, err := bot.Users.FindOne(335271283)
+    result := ""
     if err != nil {
         log.Printf("Ошибка получения пользователя %v", err)
     }
@@ -104,16 +120,16 @@ func (bot *UpgradeBot) GetTasksHandler(ctx telebot.Context) error {
     if existUser != nil {
         tasks, err := bot.Tasks.FindByUserId(335271283)
         if err != nil {
-            log.Printf("Ошибка при выводе задач %v", err)
+            return ctx.Send("Возникла ошибка при выводе задач...")
         }
-        log.Printf(strconv.Itoa(len(*tasks)))
         for i, task := range *tasks {
-            log.Printf(strconv.Itoa(i+1) + " " + task.Name)
+            formatedDate := task.EndDate.Format("01/02/2006")
+            result += strconv.Itoa(i+1) + ". " + task.Name + " | " + formatedDate+ "\n"
         }
 
     }
 
-    return ctx.Send("Done")
+    return ctx.Send(result)
 }
 
 func InitBot(token string) *telebot.Bot {

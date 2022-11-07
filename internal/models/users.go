@@ -27,7 +27,6 @@ func (m *UserModel) Create(user User) error {
 
 func (m *UserModel) FindOne(telegramId int64) (*User, error) {
 	existUser := User{}
-	//    err := db.Model(&User{}).Preload("CreditCards").Find(&users).Error
 	result := m.Db.Preload("Tasks").Find(&existUser, User{TelegramId: telegramId})
 		
 

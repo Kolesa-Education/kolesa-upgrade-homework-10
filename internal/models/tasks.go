@@ -3,7 +3,6 @@ package models
 import (
     "gorm.io/gorm"
     "time"
-    "log"
 )
 
 type Task struct {
@@ -22,10 +21,15 @@ type TaskModel struct {
 func (m *TaskModel) Create(task Task) error {
     
     result := m.Db.Create(&task)
-    log.Printf(task.Name)
 
     return result.Error
 }
+
+func (m *TaskModel) Delete(id string) error {
+    result := m.Db.Unscoped().Delete(&Task{}, id)
+    return result.Error
+}
+
 
 func (m *TaskModel) FindOne(userID uint) (*Task, error) {
     existTask := Task{}
