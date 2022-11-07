@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -50,7 +51,7 @@ func (bot *TeleBot) HelpHandler(ctx telebot.Context) error {
 }
 
 func splitTask(args *[]string) []string {
-	argString := strings.Join(*args, "")
+	argString := strings.Join(*args, " ")
 
 	return strings.Split(argString, ";")
 }
@@ -67,6 +68,15 @@ func (bot *TeleBot) AddTaskHandler(ctx telebot.Context) error {
 		UserID:      ctx.Sender().ID,
 	}
 
+	if len(task) == 0 {
+		log.Println("Вы не добавили задачу")
+	}
+
+	if len(task) != 3 {
+		log.Println("Неправильный формат задачи")
+		ctx.Send("Неправильный формат задачи")
+	}
+
 	err := bot.Tasks.Create(newTask)
 
 	if err != nil {
@@ -78,21 +88,23 @@ func (bot *TeleBot) AddTaskHandler(ctx telebot.Context) error {
 
 func (bot *TeleBot) TasksHandler(ctx telebot.Context) error {
 
-	userId := ctx.Chat().ID
+	userId := ctx.Sender().ID
 
 	tasks, err := bot.Tasks.GetAll(userId)
 
 	if err != nil {
 		log.Printf("Ошибка при чтении задач %v", err)
+		return ctx.Send("Ошибка при чтении задач")
 	}
 
 	result := ""
 
 	for _, task := range tasks {
-		result = task.Title
+
+		result += fmt.Sprintf("Title: %s\nDescription: %s\nEndDate: %s\n\n", task.Title, task.Description, task.EndDate)
 	}
 
-	return ctx.Send("Список задач: " + result)
+	return ctx.Send("Список задач: \n" + result)
 }
 
 func (bot *TeleBot) DeleteTaskHandler(ctx telebot.Context) error {
