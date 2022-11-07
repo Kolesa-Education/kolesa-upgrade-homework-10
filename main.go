@@ -41,11 +41,10 @@ func main() {
 	}
 
 	taskBot.Bot.Handle("/start", taskBot.StartHandler)
-	taskBot.Bot.Handle("/game", taskBot.GameHandler)
-	taskBot.Bot.Handle("/try", taskBot.TryHandler)
-	taskBot.Bot.Handle("/taskrule", taskBot.TaskRuleHandler)
+	taskBot.Bot.Handle("/help", taskBot.TaskRuleHandler)
 	taskBot.Bot.Handle("/addtask", taskBot.TaskHandler)
 	taskBot.Bot.Handle("/tasks", taskBot.AllTasksHandler)
+	taskBot.Bot.Handle("/deletetask", taskBot.DeleteTaskHandler)
 
 	taskBot.Bot.Start()
 }

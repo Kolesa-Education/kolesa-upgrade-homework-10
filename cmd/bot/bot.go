@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"strconv"
 	"strings"
 	"taskbot/internal/models"
@@ -68,68 +67,11 @@ func (bot *TaskBot) StartHandler(ctx telebot.Context) error {
 	return ctx.Send("Привет, " + ctx.Sender().FirstName)
 }
 
-func (bot *TaskBot) GameHandler(ctx telebot.Context) error {
-	return ctx.Send("Сыграем в камень-ножницы-бумага " +
-		"Введи твой вариант в формате /try камень")
-}
-
 func (bot *TaskBot) TaskRuleHandler(ctx telebot.Context) error {
 	return ctx.Send("Сохраните задачи в бот " +
-		"в формате \"/addtask Название;Описание;дд.мм.гггг(Дата окончания)\"")
-}
-
-func (bot *TaskBot) TryHandler(ctx telebot.Context) error {
-	attempts := ctx.Args()
-
-	if len(attempts) == 0 {
-		return ctx.Send("Вы не ввели ваш вариант")
-	}
-
-	if len(attempts) > 1 {
-		return ctx.Send("Вы ввели больше одного варианта")
-	}
-
-	try := strings.ToLower(attempts[0])
-	botTry := gameItems[rand.Intn(len(gameItems))]
-
-	if botTry == "камень" {
-		switch try {
-		case "ножницы":
-			ctx.Send("🪨")
-			return ctx.Send("Камень! Ты проиграл!")
-		case "бумага":
-			ctx.Send("🪨")
-			return ctx.Send("Камень! Ты выиграл!")
-		}
-	}
-
-	if botTry == "ножницы" {
-		switch try {
-		case "камень":
-			ctx.Send("✂️")
-			return ctx.Send("Ножницы! Ты выиграл!")
-		case "бумага":
-			ctx.Send("✂️")
-			return ctx.Send("Ножницы! Ты проиграл!")
-		}
-	}
-
-	if botTry == "бумага" {
-		switch try {
-		case "ножницы":
-			ctx.Send("📃")
-			return ctx.Send("Бумага! Ты выиграл!")
-		case "камень":
-			ctx.Send("📃")
-			return ctx.Send("Бумага! Ты проиграл!")
-		}
-	}
-
-	if botTry == try {
-		return ctx.Send("Ничья!")
-	}
-
-	return ctx.Send("Кажется вы ввели неверный вариант!")
+		"в формате: \n\"/addtask {Название};{Описание};{дд.мм.гггг(Дата окончания)}\"\n\n" +
+		"Для удаления задачи по id пишите команду в формате: \n\"/deletetask {id задачи}\"\n\n" +
+		"/tasks - Выдача всех задач пользователя\n\n")
 }
 
 func (bot *TaskBot) TaskHandler(ctx telebot.Context) error {
@@ -138,16 +80,16 @@ func (bot *TaskBot) TaskHandler(ctx telebot.Context) error {
 	log.Print(taskmsg)
 
 	if len(taskmsg) < 9 {
-		return ctx.Send("Вы не ввели вашу задачу, посмотрите /taskrule")
+		return ctx.Send("Вы не ввели вашу задачу (помощь - /help)")
 	}
 
 	args := strings.Split(taskmsg[8:], ";")
 
 	if len(args) > 3 {
-		return ctx.Send("Вы ввели больше трех параметров, посмотрите /taskrule")
+		return ctx.Send("Вы ввели больше трех параметров (помощь - /help)")
 	}
 	if len(args) < 3 {
-		return ctx.Send("Вы ввели недостаточно параметров, посмотрите /taskrule")
+		return ctx.Send("Вы ввели недостаточно параметров (помощь - /help)")
 	}
 
 	title := args[0]
@@ -173,7 +115,7 @@ func (bot *TaskBot) TaskHandler(ctx telebot.Context) error {
 		log.Printf("Ошибка создания задачи %v", err)
 	}
 
-	return ctx.Send("Задача создано!")
+	return ctx.Send("Задача создана!")
 
 }
 
@@ -195,6 +137,33 @@ func (bot *TaskBot) AllTasksHandler(ctx telebot.Context) error {
 	}
 
 	return ctx.Send(result)
+}
+
+func (bot *TaskBot) DeleteTaskHandler(ctx telebot.Context) error {
+	taskToDelete := ctx.Args()
+
+	if len(taskToDelete) == 0 {
+		return ctx.Send("Вы не ввели id задачи для удаления (помощь - /help)")
+	}
+
+	if len(taskToDelete) > 1 {
+		return ctx.Send("Вы ввели больше одной задачи для удаления (помощь - /help)")
+	}
+
+	taskId := strings.ToLower(taskToDelete[0])
+	taskIdInt, error := strconv.ParseInt(taskId, 0, 64)
+
+	if error != nil {
+		fmt.Println(error)
+	}
+
+	err := bot.Tasks.DeleteTask(taskIdInt)
+
+	if err != nil {
+		log.Printf("Ошибка удаления задачи %v", err)
+	}
+
+	return ctx.Send("Задача удалена!")
 }
 
 func InitBot(token string) *telebot.Bot {
