@@ -40,7 +40,7 @@ func (r *Repository) CreateTask(task models.Task) error {
 	return result.Error
 }
 
-func (r *Repository) FindTask(id uint) (*models.Task, error) {
+func (r *Repository) FindTask(id int) (*models.Task, error) {
 	var task *models.Task
 
 	result := r.Db.First(&task, models.Task{Id: id})
@@ -59,4 +59,8 @@ func (r *Repository) AllTasks(user *models.User) ([]models.Task, error) {
 	}
 
 	return tasks, nil
+}
+
+func (r *Repository) DeleteTask(id int) {
+	r.Db.Delete(&models.Task{}, id)
 }

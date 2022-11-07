@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,6 +36,7 @@ func (bot *TaskBot) InitCommands() {
 	bot.Bot.Handle("/start", bot.start)
 	bot.Bot.Handle("/addTask", bot.addTask)
 	bot.Bot.Handle("/tasks", bot.tasks)
+	bot.Bot.Handle("/deleteTask", bot.deleteTask)
 }
 
 func (bot *TaskBot) start(ctx telebot.Context) error {
@@ -70,7 +72,7 @@ func (bot *TaskBot) addTask(ctx telebot.Context) error {
 
 	args := ctx.Args()
 	if len(args) < countTaskArgs {
-		msg := fmt.Sprintf("Должно быть %d аргумента для создания задачи\n", countTaskArgs)
+		msg := fmt.Sprintf("Необходимое количество аргументов: %d\n", countTaskArgs)
 
 		return ctx.Send(msg + usageMsg)
 	}
@@ -95,7 +97,7 @@ func (bot *TaskBot) addTask(ctx telebot.Context) error {
 		return ctx.Send("Не удалось добавить задачу")
 	}
 
-	return ctx.Send("Запись создана")
+	return ctx.Send("Задача создана")
 }
 
 func (bot *TaskBot) tasks(ctx telebot.Context) error {
@@ -116,10 +118,10 @@ func (bot *TaskBot) tasks(ctx telebot.Context) error {
 	}
 
 	var msg string
-	for i, task := range tasks {
+	for _, task := range tasks {
 		msg += fmt.Sprintf(
 			"%d) Название: %s\nОписание: %s\nНужно сделать до: %s\n\n",
-			i+1,
+			task.Id,
 			task.Title,
 			task.Description,
 			task.EndDate,
@@ -127,4 +129,35 @@ func (bot *TaskBot) tasks(ctx telebot.Context) error {
 	}
 
 	return ctx.Send(msg)
+}
+
+func (bot *TaskBot) deleteTask(ctx telebot.Context) error {
+	const (
+		countTaskArgs = 1
+		usageMsg      = "/deleteTask {id}"
+	)
+
+	args := ctx.Args()
+	if len(args) != countTaskArgs {
+		msg := fmt.Sprintf("Необходимое количество аргументов: %d\n", countTaskArgs)
+
+		return ctx.Send(msg + usageMsg)
+	}
+
+	id, err := strconv.Atoi(args[0])
+	if err != nil {
+		return ctx.Send("Неверный id задачи")
+	}
+
+	task, err := bot.Repo.FindTask(id)
+	if err != nil {
+		log.Printf("Ошибка при нахождении задачи: %s", err)
+	}
+
+	if task == nil {
+		return ctx.Send("Такой задачи не существует   ")
+	}
+	bot.Repo.DeleteTask(id)
+
+	return ctx.Send("Задача удалена")
 }
