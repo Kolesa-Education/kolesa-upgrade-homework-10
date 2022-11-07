@@ -90,8 +90,8 @@ func (bot *UpgradeBot) GetTasksHandler(ctx telebot.Context) error {
             result := ""
             formatedDate := task.EndDate.Format("01/02/2006")
             taskId := strconv.FormatUint(uint64(task.ID), 10)
-            result += taskId + ". " + task.Name
-            result += "EndDate: " + formatedDate + " \n"
+            result += taskId + ". " + task.Name + " \n"
+            result += "EndDate: " + formatedDate
             menu := &telebot.ReplyMarkup{}
             btn := menu.Data("Delete item "+taskId, "delete"+taskId, "delete::"+taskId)
             bot.Bot.Handle(&btn, bot.deleteTask)
