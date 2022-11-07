@@ -119,9 +119,8 @@ func (bot *UpgradeBot) TasksHandler(ctx telebot.Context) error {
 
 	for _, user := range users {
 		if user.ChatId == ctx.Chat().ID {
-			for _, task := range user.Tasks {
-				tasksMsg += fmt.Sprintf("Загаловок: %s\nОписания: %s\nДедлайн: %s\n----------\n", task.Title, task.Description, task.EndDate)
-			}
+			tasksMsg = GetTasks(user.Tasks)
+			break
 		}
 	}
 
@@ -162,4 +161,12 @@ func Parse(str string) ([]string, error) {
 		return nil, ErrInArguments
 	}
 	return args, nil
+}
+
+func GetTasks(tasks []models.Task) string {
+	var tasksMsg string
+	for _, task := range tasks {
+		tasksMsg += fmt.Sprintf("Загаловок: %s\nОписания: %s\nДедлайн: %s\n----------\n", task.Title, task.Description, task.EndDate)
+	}
+	return tasksMsg
 }
