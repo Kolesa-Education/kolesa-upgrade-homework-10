@@ -3,6 +3,7 @@ package bot
 import (
 	"log"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 	"upgrade/internal/models"
@@ -12,8 +13,8 @@ import (
 
 type UpgradeBot struct {
 	Bot   *telebot.Bot
-	Users *models.UserModel
 	Tasks *models.TaskModel
+	Users *models.UserModel
 }
 
 var gameItems = [3]string{
@@ -132,52 +133,40 @@ func (bot *UpgradeBot) TryHandler(ctx telebot.Context) error {
 }
 
 func (bot *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {
-	var (
-		description string
-		end_date    string
-	)
+	return ctx.Send("Заполните задачу в формате : " +
+		"/newtask Заголовок//Описание//Дедлайн(чч:мм дд.мм.гг)")
+}
 
-	ctx.Send("Введите заголовок к задаче")
-Title:
-	input := ctx.Get()
+func (bot *UpgradeBot) NewTaskHandler(ctx telebot.Context) error {
 
-	if len(input) == 0 {
-		goto Title
-	}
-
-	title := input[0]
-	ctx.Send("Теперь введите содержание задачи " + title)
-	time.Sleep(1 * time.Second)
-Description:
-	input = ctx.Args()
-	description = ""
+	input := ctx.Args()
 
 	if len(input) == 0 {
-		time.Sleep(1 * time.Second)
-		goto Description
+		return ctx.Send("Вы не заполнили задачу!")
 	}
 
-	description = strings.Join(input, " ")
-	ctx.Send("Введите дедлайн к задаче " + title)
-	time.Sleep(1 * time.Second)
-End_date:
-	input = ctx.Args()
-	end_date = "нет сроков"
+	args := strings.Join(input, " ")
+	args = strings.Replace(args, "/newtask ", "", 1)
+	argsArr := strings.Split(args, "//")
 
-	if len(input) == 0 {
-		time.Sleep(1 * time.Second)
-		goto End_date
+	if len(argsArr) > 3 {
+		return ctx.Send("Вы ввели лешние разделители '//'")
 	}
 
-	end_date = strings.Join(input, " ")
+	title := argsArr[0]
+	description := argsArr[1]
+	endDate := argsArr[2]
+	existUser, err := bot.Users.FindOne(ctx.Sender().ID)
+	userId := existUser.ID
 
 	newTask := models.Task{
 		Title:       title,
 		Description: description,
-		End_date:    end_date,
+		EndDate:     endDate,
+		UserId:      int64(userId),
 	}
 
-	existTask, err := bot.Tasks.FindSame(title, description)
+	existTask, err := bot.Tasks.FindSame(0, title, description)
 
 	if err != nil {
 		log.Printf("Ошибка получения задачи %v", err)
@@ -191,8 +180,52 @@ End_date:
 		}
 	}
 
-	return ctx.Send("Новая задача: " + title + "\n " + description + "\n Дедлайн: " + end_date)
+	return ctx.Send("Новая задача: " + title + "\n " + description + "\n Дедлайн: " + endDate)
 
+}
+
+func (bot *UpgradeBot) TasksHandler(ctx telebot.Context) error {
+	existUser, err := bot.Users.FindOne(ctx.Sender().ID)
+	if err != nil {
+		return ctx.Send("У вас ещё нет задач, сипользуйте команду /start звтем /addtask")
+	}
+	userId := existUser.ID
+	userTasks, _ := bot.Tasks.GetAllByUserId(int64(userId))
+	var tasks []string
+
+	for _, task := range userTasks {
+		taskId := strconv.Itoa(task.ID)
+		tasks = append(tasks, "id: "+taskId+"\n"+task.Title+"\n"+task.Description+"\n"+task.EndDate+"\n")
+	}
+	result := strings.Join(tasks, "\n")
+	return ctx.Send(result)
+}
+
+func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
+	input := ctx.Args()
+
+	if len(input) > 1 {
+		return ctx.Send("Вы ввели слишком много аргументов!")
+	}
+
+	taskId, err := strconv.Atoi(input[0])
+
+	if err != nil {
+		return ctx.Send("id задачи неверное!")
+	}
+
+	existTask, err := bot.Tasks.FindSame(taskId, "", "")
+
+	if err != nil {
+		return ctx.Send("Неудалось найти задачу!")
+	}
+
+	err = bot.Tasks.DropTask(*existTask)
+	if err != nil {
+		return ctx.Send("Не удалось удалить задачу, попробуйте ещё раз!")
+	}
+
+	return ctx.Send("Задача удалена")
 }
 
 func InitBot(token string) *telebot.Bot {

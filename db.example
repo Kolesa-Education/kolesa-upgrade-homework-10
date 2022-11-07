@@ -10,14 +10,19 @@ create table users (
     last_name varchar(255),
     chat_id int,
     created_at datetime DEFAULT CURRENT_TIMESTAMP,
-    update_at datetime,
-    deleted_at datetime,
+    updated_at datetime,
+    deleted_at datetime
 );
 
 create table tasks (
     id int NOT NULL auto_increment PRIMARY KEY,
-    user_id int NOT NULL, title varchar(255) NOT NULL,
+    user_id int NOT NULL,
+    title varchar(255) NOT NULL,
     description text,
+    end_date varchar(20),
+    created_at datetime DEFAULT CURRENT_TIMESTAMP,
+    updated_at datetime,
+    deleted_at datetime,
     FOREIGN KEY (user_id) REFERENCES users (id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
