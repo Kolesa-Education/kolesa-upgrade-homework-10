@@ -31,9 +31,9 @@ func InitBot(token string) *telebot.Bot {
 }
 
 func (bot *Bot) StartHandler(ctx telebot.Context) error {
-	db := bot.Database.NewUser(ctx.Sender().ID, ctx.Sender().FirstName, ctx.Sender().LastName, ctx.Chat().ID)
-	if db != nil {
-		log.Println("Error creating user:", db.Error())
+	err := bot.Database.NewUser(ctx.Sender().ID, ctx.Sender().FirstName, ctx.Sender().LastName, ctx.Chat().ID)
+	if err != nil {
+		log.Println("Error creating user:", err.Error())
 	}
 	return ctx.Send("Привет, " + ctx.Sender().FirstName)
 }
