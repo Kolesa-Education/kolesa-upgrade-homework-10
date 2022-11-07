@@ -37,14 +37,15 @@ func main() {
 	teleBot := bot.TeleBot{
 		Bot:   bot.InitBot(cfg.BotToken),
 		Users: &models.UserModel{Db: db},
+		Tasks: &models.TaskModel{Db: db},
 	}
 
 	teleBot.Bot.Handle("/start", teleBot.StartHandler)
 	teleBot.Bot.Handle("/help", teleBot.HelpHandler)
 	teleBot.Bot.Handle("/addTask", teleBot.AddTaskHandler)
 
-	//teleBot.Bot.Handle("/tasks", teleBot.TasksHandler)
-	//teleBot.Bot.Handle("/deleteTask {id}", teleBot.DeleteTaskHandler)
+	teleBot.Bot.Handle("/tasks", teleBot.TasksHandler)
+	teleBot.Bot.Handle("/deleteTask", teleBot.DeleteTaskHandler)
 
 	teleBot.Bot.Start()
 }

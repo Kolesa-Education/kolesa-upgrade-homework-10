@@ -17,22 +17,29 @@ type TaskModel struct {
 }
 
 func (m *TaskModel) Create(task Task) error {
+
 	result := m.Db.Create(&task)
+
 	return result.Error
 }
 
-/*func (m *TaskModel) GetAll(taskId int) (*Task, error) {
+func (m *TaskModel) GetAll(userId int64) ([]Task, error) {
 
-	tasks := Task{}
+	tasks := []Task{}
+	result := m.Db.Where("user_id = ?", userId).Find(&tasks)
 
-	err := m.Db.Preload("Tasks").Find(&tasks, taskId).Error
+	if result.Error != nil {
+		return nil, result.Error
+	}
 
-	return &tasks, err
+	return tasks, nil
 }
 
-func (m *TaskModel) DeleteTask(taskId string, userId int64) bool {
+func (m *TaskModel) DeleteTask(taskId int) error {
 
-	m.Db.Where("user_id = ?", userId).Where("id = ?", taskId).Delete(&Task{})
+	task := Task{}
 
-	return true
-}*/
+	result := m.Db.Where("id = ?", taskId).Delete(&task, taskId)
+
+	return result.Error
+}

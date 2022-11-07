@@ -2,6 +2,7 @@ package bot
 
 import (
 	"log"
+	"strconv"
 	"strings"
 	"telebot/internal/models"
 	"time"
@@ -42,8 +43,10 @@ func (bot *TeleBot) StartHandler(ctx telebot.Context) error {
 }
 
 func (bot *TeleBot) HelpHandler(ctx telebot.Context) error {
-	return ctx.Send("Добавь новую задачу в формате: \n" +
-		"/addTask Название задачи; Описание задачи; Дату сдачи задачи")
+	return ctx.Send("Можешь добавить новую задачу в формате:\n" +
+		"/addTask Название задачи; Описание задачи; Дату сдачи задачи \n" +
+		"/tasks просмотреть названия задач \n" +
+		"/deleteTask {taskId} удалить задачу")
 }
 
 func splitTask(args *[]string) []string {
@@ -73,15 +76,39 @@ func (bot *TeleBot) AddTaskHandler(ctx telebot.Context) error {
 	return ctx.Send("Задача " + newTask.Title + " создана")
 }
 
-/*
 func (bot *TeleBot) TasksHandler(ctx telebot.Context) error {
 
+	userId := ctx.Chat().ID
+
+	tasks, err := bot.Tasks.GetAll(userId)
+
+	if err != nil {
+		log.Printf("Ошибка при чтении задач %v", err)
+	}
+
+	result := ""
+
+	for _, task := range tasks {
+		result = task.Title
+	}
+
+	return ctx.Send("Список задач: " + result)
 }
 
 func (bot *TeleBot) DeleteTaskHandler(ctx telebot.Context) error {
+	task := ctx.Args()
 
+	taskId, err := strconv.Atoi(task[0])
+
+	if err != nil {
+		log.Printf("Ошибка при удалении задачи %v", err)
+	}
+
+	err = bot.Tasks.DeleteTask(taskId)
+
+	return ctx.Send("Задача удалена")
 }
-*/
+
 func InitBot(token string) *telebot.Bot {
 	pref := telebot.Settings{
 		Token:  token,
