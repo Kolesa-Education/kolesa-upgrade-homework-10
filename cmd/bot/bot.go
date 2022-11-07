@@ -53,7 +53,8 @@ func (bot *UpgradeBot) AddHandler(ctx telebot.Context) error {
 	}
 
 	if err := bot.Tasks.Create(newTask); err != nil {
-		log.Fatalf("Ошибка создания задания %v", err)
+		log.Printf("Ошибка создания задания %v", err)
+		return ctx.Send("Ошибка создания задания")
 	}
 	return ctx.Send("Новое задание успешно добавлено")
 }
