@@ -1,8 +1,10 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
+	"strconv"
 	"strings"
 	"taskbot/internal/models"
 	"time"
@@ -10,9 +12,10 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-type UpgradeBot struct {
+type TaskBot struct {
 	Bot   *telebot.Bot
 	Users *models.UserModel
+	Tasks *models.TaskModel
 }
 
 var gameItems = [3]string{
@@ -39,7 +42,7 @@ var loseSticker = &telebot.Sticker{
 	Animated: true,
 }
 
-func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
+func (bot *TaskBot) StartHandler(ctx telebot.Context) error {
 	newUser := models.User{
 		Name:       ctx.Sender().Username,
 		TelegramId: ctx.Chat().ID,
@@ -65,12 +68,17 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 	return ctx.Send("Привет, " + ctx.Sender().FirstName)
 }
 
-func (bot *UpgradeBot) GameHandler(ctx telebot.Context) error {
+func (bot *TaskBot) GameHandler(ctx telebot.Context) error {
 	return ctx.Send("Сыграем в камень-ножницы-бумага " +
 		"Введи твой вариант в формате /try камень")
 }
 
-func (bot *UpgradeBot) TryHandler(ctx telebot.Context) error {
+func (bot *TaskBot) TaskRuleHandler(ctx telebot.Context) error {
+	return ctx.Send("Сохраните задачи в бот " +
+		"в формате \"/addtask Название;Описание;дд.мм.гггг(Дата окончания)\"")
+}
+
+func (bot *TaskBot) TryHandler(ctx telebot.Context) error {
 	attempts := ctx.Args()
 
 	if len(attempts) == 0 {
@@ -122,6 +130,71 @@ func (bot *UpgradeBot) TryHandler(ctx telebot.Context) error {
 	}
 
 	return ctx.Send("Кажется вы ввели неверный вариант!")
+}
+
+func (bot *TaskBot) TaskHandler(ctx telebot.Context) error {
+	taskmsg := ctx.Message().Text
+
+	log.Print(taskmsg)
+
+	if len(taskmsg) < 9 {
+		return ctx.Send("Вы не ввели вашу задачу, посмотрите /taskrule")
+	}
+
+	args := strings.Split(taskmsg[8:], ";")
+
+	if len(args) > 3 {
+		return ctx.Send("Вы ввели больше трех параметров, посмотрите /taskrule")
+	}
+	if len(args) < 3 {
+		return ctx.Send("Вы ввели недостаточно параметров, посмотрите /taskrule")
+	}
+
+	title := args[0]
+	description := args[1]
+	end_date := args[2]
+	fmt.Println(end_date)
+	date, error := time.Parse("02.01.2006", strings.TrimSpace(end_date))
+
+	if error != nil {
+		fmt.Println(error)
+	}
+
+	newTask := models.Task{
+		Title:       title,
+		Description: description,
+		EndDate:     date,
+		UserId:      ctx.Chat().ID,
+	}
+
+	err := bot.Tasks.Create(newTask)
+
+	if err != nil {
+		log.Printf("Ошибка создания задачи %v", err)
+	}
+
+	return ctx.Send("Задача создано!")
+
+}
+
+func (bot *TaskBot) AllTasksHandler(ctx telebot.Context) error {
+	user_id := ctx.Chat().ID
+
+	tasks, err := bot.Tasks.FindTasks(user_id)
+	if err != nil {
+		log.Printf("Ошибка поиска задач %v", err)
+	}
+
+	result := ""
+
+	for _, task := range tasks {
+		result += "Id: " + strconv.FormatUint(uint64(task.ID), 10) + "\n"
+		result += "Task: " + task.Title + "\n"
+		result += "Description: " + task.Description + "\n"
+		result += "End date: " + task.EndDate.Format("02.01.2006") + "\n\n"
+	}
+
+	return ctx.Send(result)
 }
 
 func InitBot(token string) *telebot.Bot {
