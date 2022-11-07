@@ -37,9 +37,13 @@ func main() {
 	upgradeBot := bot.UpgradeBot{
 		Bot:   bot.InitBot(cfg.BotToken),
 		Users: &models.UserModel{Db: db},
+		Tasks: &models.TaskModel{Db: db},
 	}
 
 	upgradeBot.Bot.Handle("/start", upgradeBot.StartHandler)
+	upgradeBot.Bot.Handle("/addTask", upgradeBot.AddTaskHandler)
+	upgradeBot.Bot.Handle("/tasks", upgradeBot.GetAllTasksHandler)
+	upgradeBot.Bot.Handle("/deleteTask", upgradeBot.DeleteTaskHandler)
 
 	upgradeBot.Bot.Start()
 }
