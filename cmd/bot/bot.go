@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"telegramTaskBot/internal/models"
 	"time"
@@ -14,6 +15,27 @@ type UpgradeBot struct {
 	Bot   *telebot.Bot
 	Users *models.UserModel
 	Tasks *models.TaskModel
+}
+
+func (bot *UpgradeBot) DeleteHandler(ctx telebot.Context) error {
+
+	attempts := ctx.Args()
+	deleteId, _ := strconv.ParseInt(attempts[0], 0, 64)
+
+	if len(attempts) == 0 {
+		return ctx.Send("Вы не ввели номер задачи")
+	}
+
+	if len(attempts) > 1 {
+		return ctx.Send("Слишком много аргументов")
+	}
+
+	if err := bot.Tasks.DeleteTask(deleteId, ctx.Sender().ID); err != nil {
+		log.Fatalf("Ошибка выполнения запроса пользователя %v", err)
+	}
+
+	return ctx.Send("Ваше задание удалено!")
+
 }
 
 func (bot *UpgradeBot) AddHandler(ctx telebot.Context) error {
@@ -88,7 +110,7 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 			log.Printf("Ошибка создания пользователя %v", err)
 		}
 	}
-	return ctx.Send("Привет, " + ctx.Sender().FirstName + "\n/addTask TaskName,Description,DueDate\n/tasks")
+	return ctx.Send("Привет, " + ctx.Sender().FirstName + "\n/addTask TaskName,Description,DueDate\n/tasks\n/deleteTask NumberOfTask")
 
 }
 func InitBot(token string) *telebot.Bot {

@@ -18,6 +18,12 @@ type TaskModel struct {
 	Db *gorm.DB
 }
 
+func (m *TaskModel) DeleteTask(task_id int64, user_id int64) error {
+	db := m.Db.Where("user_id = ?", user_id).Where("id = ?", task_id).Delete(&Task{})
+
+	return db.Error
+}
+
 func (m *TaskModel) FindAll(userId int64) ([]Task, error) {
 	var tasks []Task
 
