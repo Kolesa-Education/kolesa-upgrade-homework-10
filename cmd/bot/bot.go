@@ -4,6 +4,7 @@ import (
 	"gopkg.in/telebot.v3"
 	"log"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 	"upgrade/internal/models"
@@ -152,14 +153,12 @@ func (bot *UpgradeBot) AddTask(ctx telebot.Context) error {
 
 	if attems == "" {
 		return ctx.Send("Надо ввести значение по как /addTask Заголовк | Текст | дата окончания\t Например\t /addTask Сходить в магаз | Пойти в магаз за хлебом :) | 19:30   ")
-
 	}
 	//разделяю на части как заголовк-задача-время
 	task := strings.Split(attems, "|")
 
 	if len(task) < 3 || len(task) > 3 {
 		return ctx.Send("Надо ввести значение по как /addTask Заголовк | Текст | дата окончания\t Например\t /addTask Сходить в магаз | Пойти в магаз за хлебом :) | 19:30   ")
-
 	}
 
 	title := task[0]
@@ -176,6 +175,7 @@ func (bot *UpgradeBot) AddTask(ctx telebot.Context) error {
 		EndDate: endTime,
 		Userid:  ctx.Chat().ID,
 	}
+
 	err := bot.Tasks.CreateTask(newTask)
 
 	if err != nil {
@@ -190,6 +190,42 @@ func (bot *UpgradeBot) ShowTasks(context telebot.Context) error {
 
 	tasksUser := &bot.Tasks
 	_, tasksList := (*tasksUser).ShowTaskDb(context.Chat().ID)
-	context.Send(tasksList)
+
+	log.Print(tasksList)
+
+	if len(tasksList) == 0 {
+		return context.Send("У вас нет заданий ")
+	}
+
+	for i := 0; i < len(tasksList); i++ {
+		context.Send(tasksList[i].Title)
+	}
+
 	return context.Send(tasksList)
+}
+
+func (bot *UpgradeBot) DeleteTask(context telebot.Context) error {
+
+	tasksUser := &bot.Tasks
+
+	apptemp := context.Args()
+
+	if len(apptemp) > 1 || len(apptemp) < 1 {
+		return context.Send("попробуйте еще раз")
+	}
+
+	askId, _ := strconv.ParseInt(context.Args()[0], 0, 64)
+
+	if askId < 1 {
+		return context.Send("попробуйте еще раз")
+	}
+
+	_, taskslist := (*tasksUser).ShowTaskDb(context.Chat().ID)
+
+	if len(taskslist) == 0 {
+		return context.Send("У вас нет заданий ")
+	}
+
+	(*tasksUser).DeleteTask(taskslist[askId-1].Id)
+	return context.Send(" Задание удалено")
 }

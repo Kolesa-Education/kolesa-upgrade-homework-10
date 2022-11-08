@@ -6,7 +6,7 @@ import (
 )
 
 type Task struct {
-	gorm.Model
+	Id      int64  `json:"id"`
 	Title   string `json:"title"`
 	Descr   string `json:"descr"`
 	EndDate string `json:"endDate"`
@@ -22,12 +22,26 @@ func (m *TaskModel) CreateTask(task Task) error {
 	return result.Error
 }
 
-func (m *TaskModel) ShowTaskDb(userId int64) (error, Task) {
-	tasks := Task{}
-	err := m.Db.Preload("Tasks").Find(&tasks, userId)
-	if err.Error != nil {
-		log.Print("Fatal")
+func (m *TaskModel) ShowTaskDb(userId int64) (error, []Task) {
+	tasks := []Task{}
+
+	result := m.Db.Where("userId = ?", userId).Find(&tasks)
+
+	if result.Error != nil {
+		log.Print("Ошибка")
 	}
-	log.Fatal(err)
+
 	return nil, tasks
+}
+
+func (m *TaskModel) DeleteTask(id int64) error {
+
+	result := m.Db.Table("tasks").Where("id=?", id).Delete(&Task{})
+
+	if result.Error != nil {
+		log.Fatalf("ошибка удаления", result.Error)
+	}
+
+	return result.Error
+
 }
