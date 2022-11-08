@@ -22,7 +22,8 @@ func (bot *UpgradeBot) AddHandler(ctx telebot.Context) error {
 
 	vals := strings.Split(value, ",")
 
-	date, err1 := time.Parse("02.01.2006 15:04", vals[2])
+	date, err1 := time.Parse("02.01.2006 15:04", vals[2]) // ! time.Parse("02.01.2006 15:04) is not working well
+	// golang bd is 02.01.2006 15:04 i guess
 	if err1 != nil {
 		fmt.Println(len(vals), vals, date)
 
