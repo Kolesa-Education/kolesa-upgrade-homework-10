@@ -21,12 +21,15 @@ func (bot *UpgradeBot) AddHandler(ctx telebot.Context) error {
 	value := strings.Replace(task, "/addTask ", "", -1)
 
 	vals := strings.Split(value, ",")
+	if len(vals) <= 3 {
+		return ctx.Send("Недостаточно параметров, попробуйте еще раз")
 
+	}
 	date, err1 := time.Parse("02.01.2006 15:04", vals[2]) // ! time.Parse("02.01.2006 15:04) is not working well
 	// golang bd is 02.01.2006 15:04 i guess
 	if err1 != nil {
-		fmt.Println(len(vals), vals, date)
-
+		//fmt.Println(len(vals), vals, date)
+		return ctx.Send("Не правильный формат даты, попробуйте еще раз")
 	}
 	newTask := models.Task{
 		Title:       vals[0],
@@ -34,7 +37,7 @@ func (bot *UpgradeBot) AddHandler(ctx telebot.Context) error {
 		UserId:      ctx.Sender().ID,
 		EndDate:     date,
 	}
-	fmt.Println(date)
+	// fmt.Println(date)
 	if err := bot.Tasks.Create(newTask); err != nil {
 		log.Printf("Ошибка создания задания %v", err)
 		return ctx.Send("Ошибка создания задания")
@@ -47,7 +50,8 @@ func (bot *UpgradeBot) ShowHandler(ctx telebot.Context) error {
 	tasks, err := bot.Tasks.FindAll(ctx.Sender().ID)
 
 	if err != nil {
-		log.Fatalf("Ошибка обработки задачи %v", err)
+		return ctx.Send("Задании еще нет)")
+		//log.Fatalf("Ошибка обработки задачи %v", err)
 	}
 
 	var strTasks []string
