@@ -34,8 +34,3 @@ func (m *TaskModel) Create(task Task) error {
 	result := m.Db.Create(&task)
 	return result.Error
 }
-func (m *TaskModel) DeleteTask(task_id int64, user_id int64) error {
-	db := m.Db.Where("user_id = ?", user_id).Where("id = ?", task_id).Delete(&Task{})
-
-	return db.Error
-}

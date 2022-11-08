@@ -3,7 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"telegramTaskBot/internal/models"
 	"time"
@@ -17,34 +16,17 @@ type UpgradeBot struct {
 	Tasks *models.TaskModel
 }
 
-func (bot *UpgradeBot) DeleteHandler(ctx telebot.Context) error {
-
-	attempts := ctx.Args()
-	deleteId, _ := strconv.ParseInt(attempts[0], 0, 64)
-
-	if len(attempts) == 0 {
-		return ctx.Send("Вы не ввели ваш ИД")
-	}
-
-	if len(attempts) > 1 {
-		return ctx.Send("Вы ввели больше одного ИД")
-	}
-
-	if err := bot.Tasks.DeleteTask(deleteId, ctx.Sender().ID); err != nil {
-		log.Fatalf("Ошибка выполнения запроса пользователя %v", err)
-	}
-
-	return ctx.Send("Ваше задание удалено!")
-
-}
-
 func (bot *UpgradeBot) AddHandler(ctx telebot.Context) error {
 	task := ctx.Text()
 	value := strings.Replace(task, "/addTask ", "", -1)
 
 	vals := strings.Split(value, ",")
-	fmt.Println(len(vals))
-	date, _ := time.Parse("01.01.2002", vals[2])
+
+	date, err1 := time.Parse("02.01.2006 15:04", vals[2])
+	if err1 != nil {
+		fmt.Println(len(vals), vals, date)
+
+	}
 	newTask := models.Task{
 		Title:       vals[0],
 		Description: vals[1],
@@ -70,7 +52,7 @@ func (bot *UpgradeBot) ShowHandler(ctx telebot.Context) error {
 	var strTasks []string
 
 	for _, el := range tasks {
-		str := fmt.Sprintf(`#: %d title: %s description: %s end_date: %s`, el.ID, el.Title, el.Description, el.EndDate)
+		str := fmt.Sprintf(`#: %d: %s: %s due: %s`, el.ID, el.Title, el.Description, el.EndDate)
 		strTasks = append(strTasks, str)
 	}
 
@@ -101,7 +83,7 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 			log.Printf("Ошибка создания пользователя %v", err)
 		}
 	}
-	return ctx.Send("Привет, " + ctx.Sender().FirstName)
+	return ctx.Send("Привет, " + ctx.Sender().FirstName + "\n/addTask TaskName,Description,DueDate\n/tasks")
 
 }
 func InitBot(token string) *telebot.Bot {
