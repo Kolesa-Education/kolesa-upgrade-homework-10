@@ -5,11 +5,11 @@ import (
 	"log"
 )
 
-type Task struct {
+type Tasks struct {
 	Id      int64  `json:"id"`
 	Title   string `json:"title"`
 	Descr   string `json:"descr"`
-	EndDate string `json:"endDate"`
+	EndDate string `json:"end_Date"`
 	Userid  int64  `json:"userId"`
 }
 
@@ -17,13 +17,13 @@ type TaskModel struct {
 	Db *gorm.DB
 }
 
-func (m *TaskModel) CreateTask(task Task) error {
+func (m *TaskModel) CreateTask(task Tasks) error {
 	result := m.Db.Create(&task)
 	return result.Error
 }
 
-func (m *TaskModel) ShowTaskDb(userId int64) (error, []Task) {
-	tasks := []Task{}
+func (m *TaskModel) ShowTaskDb(userId int64) (error, []Tasks) {
+	tasks := []Tasks{}
 
 	result := m.Db.Where("userId = ?", userId).Find(&tasks)
 
@@ -36,7 +36,7 @@ func (m *TaskModel) ShowTaskDb(userId int64) (error, []Task) {
 
 func (m *TaskModel) DeleteTask(id int64) error {
 
-	result := m.Db.Table("tasks").Where("id=?", id).Delete(&Task{})
+	result := m.Db.Table("tasks").Where("id=?", id).Delete(&Tasks{})
 
 	if result.Error != nil {
 		log.Fatalf("ошибка удаления", result.Error)

@@ -169,7 +169,7 @@ func (bot *UpgradeBot) AddTask(ctx telebot.Context) error {
 		return ctx.Send("Надо ввести значение по как /addTask Заголовк | Текст | дата окончания\t Например\t /addTask Сходить в магаз | Пойти в магаз за хлебом :) | 19:30   ")
 	}
 
-	newTask := models.Task{
+	newTask := models.Tasks{
 		Title:   title,
 		Descr:   description,
 		EndDate: endTime,
@@ -191,14 +191,12 @@ func (bot *UpgradeBot) ShowTasks(context telebot.Context) error {
 	tasksUser := &bot.Tasks
 	_, tasksList := (*tasksUser).ShowTaskDb(context.Chat().ID)
 
-	log.Print(tasksList)
-
 	if len(tasksList) == 0 {
 		return context.Send("У вас нет заданий ")
 	}
 
 	for i := 0; i < len(tasksList); i++ {
-		context.Send(tasksList[i].Title)
+		context.Send(strconv.Itoa(i+1) + "." + tasksList[i].Title + ":" + tasksList[i].Descr)
 	}
 
 	return context.Send(tasksList)
@@ -222,10 +220,25 @@ func (bot *UpgradeBot) DeleteTask(context telebot.Context) error {
 
 	_, taskslist := (*tasksUser).ShowTaskDb(context.Chat().ID)
 
+	if int(askId) > len(taskslist) {
+		return context.Send("неправильный ввод")
+	}
+
 	if len(taskslist) == 0 {
 		return context.Send("У вас нет заданий ")
 	}
 
 	(*tasksUser).DeleteTask(taskslist[askId-1].Id)
-	return context.Send(" Задание удалено")
+
+	return context.Send("Задание : " + taskslist[askId-1].Title + ":  удалено")
+}
+
+func (bot *UpgradeBot) CommandsList(context telebot.Context) error {
+	return context.Send("Команды:\n" +
+		"1./addTasks\n" +
+		"2./showTasks\n" +
+		"3./deleteTask\n" +
+		"3./deleteTask\n" +
+		"4./game\n" +
+		"5./try")
 }

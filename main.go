@@ -45,8 +45,8 @@ func main() {
 	//то что сделал
 	upgradeBot.Bot.Handle("/addTask", upgradeBot.AddTask)
 	upgradeBot.Bot.Handle("/showTasks", upgradeBot.ShowTasks)
-	//TODO реализивать DeleteTask
 	upgradeBot.Bot.Handle("/deleteTask", upgradeBot.DeleteTask)
+	upgradeBot.Bot.Handle("/commands", upgradeBot.CommandsList)
 
 	upgradeBot.Bot.Start()
 }
