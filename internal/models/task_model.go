@@ -19,3 +19,8 @@ func (t *TaskModel) Create(task Task) error {
 
 	return result.Error
 }
+
+func (t *TaskModel) Delete(id int, nameColumn string) error {
+	result := t.Db.Where(nameColumn+" = ?", id).Delete(&Task{})
+	return result.Error
+}

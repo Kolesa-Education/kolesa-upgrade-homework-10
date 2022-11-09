@@ -3,6 +3,7 @@ package bot
 import (
 	"gopkg.in/telebot.v3"
 	"log"
+	"strconv"
 	"strings"
 	"telegrambot/internal/models"
 )
@@ -84,9 +85,24 @@ func (bot *UpgradeBot) AllTaskHandler(ctx telebot.Context) error {
 	}
 	msg := ""
 	for _, task := range tasks {
-		msg += "Title:" + task.Title + "\n" + "Description:" + task.Description + "\n" + "Deadline:" + task.EndDate + "\n"
+		msg += "Title:" + task.Title + "\n" + "Description:" + task.Description + "\n" + "Deadline:" + task.EndDate + "\n\n"
+	}
+	return ctx.Send(msg)
+}
+
+func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
+	tempNum := ctx.Data()
+	idDelete, err := strconv.Atoi(tempNum)
+	if err != nil {
+		log.Printf("Ошибка при считывании id")
+		return ctx.Send("Пожалуйста повторите действие")
 	}
 
-	return ctx.Send(msg)
+	err = bot.Tasks.Delete(idDelete, "user_id")
+	if err != nil {
+		log.Printf("Ошибка при удалении записи %err", err)
+		return ctx.Send("Произошла ошибка при удалении записи")
+	}
 
+	return nil
 }
