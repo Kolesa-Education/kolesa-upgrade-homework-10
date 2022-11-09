@@ -137,11 +137,6 @@ func (bot *TodoBot) DeleteTodoHandler(ctx telebot.Context) error {
 			"Чтобы посмотреть ID нужной задачи, введите /todos")
 	}
 
-	//existUser, err := bot.Users.FindOne(ctx.Chat().ID)
-	//if err != nil {
-	//	log.Printf("Ошибка получения пользователя %v", err)
-	//}
-
 	taskID, err := strconv.Atoi(taskArg[0])
 	if err != nil {
 		log.Printf("Ошибка удаления задачи. Неверный ID %v", err)
