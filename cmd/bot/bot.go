@@ -30,7 +30,7 @@ func (bot *TodoBot) StartHandler(ctx telebot.Context) error {
 	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
 
 	if err != nil {
-		log.Printf("Ошибка получения пользователя %v", err)
+		log.Printf("Не удалось получить пользователя. Попробуем создать его. %v", err)
 	}
 
 	if existUser == nil {
