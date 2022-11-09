@@ -1,13 +1,17 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type Task struct {
 	gorm.Model
-	Task        string `json:"task"`
-	Description string `json:"description"`
-	End_date    int    `json:"end_date"`
-	TelegramId  int64  `json:"telegram_id"`
+	Task        string    `json:"task"`
+	Description string    `json:"description"`
+	End_date    time.Time `json:"end_date"`
+	TelegramId  int64     `json:"telegram_id"`
 }
 
 type TaskModel struct {
@@ -16,7 +20,7 @@ type TaskModel struct {
 
 func (m *TaskModel) Create(task Task) error {
 
-	result := m.Db.Create(&task)
+	result := m.Db.Create(&task) //nado dobavit' userid
 
 	return result.Error
 }
@@ -26,6 +30,7 @@ func (m TaskModel) AllTask(telegram_id int64) ([]Task, error) {
 	return tasks, db.Error
 }
 
-// func (m *TaskModel) DeleteTask(telegram_id int64) bool {
-// 	return true
-// }
+func (m *TaskModel) DeleteTask(task_id int, telegram_id int64) error {
+	db := m.Db.Where("telegram_id = ?", telegram_id).Where("id = ?", task_id).Delete(&Task{})
+	return db.Error
+}

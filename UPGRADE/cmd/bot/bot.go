@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+
 	"strconv"
 	"strings"
 	"time"
@@ -26,11 +27,11 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 		ChatId:     ctx.Chat().ID,
 	}
 
-	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
+	existUser, _ := bot.Users.FindOne(ctx.Chat().ID)
 
-	if err != nil {
-		log.Printf("Ошибка получения пользователя %v", err)
-	}
+	// if err != nil {
+	// 	log.Printf("Ошибка получения пользователя %v", err)
+	// } поидее это все Katerina писала
 
 	if existUser == nil {
 		err := bot.Users.Create(newUser)
@@ -60,23 +61,20 @@ func InitBot(token string) *telebot.Bot {
 func (bot *UpgradeBot) AddTask(ctx telebot.Context) error {
 	task := ctx.Text()
 	value := strings.Replace(task, "/addTask ", "", -1)
-	fmt.Println(value)
 	values := strings.Split(value, "/")
-	for i, s := range values {
-		fmt.Println(i, s)
-	}
-	enddata, _ := strconv.Atoi(values[2])
+
+	t, _ := time.Parse("2006-01-02 15:04:05", values[2])
 	newTask := models.Task{
 		Task:        values[0],
 		Description: values[1],
 		TelegramId:  ctx.Chat().ID,
-		End_date:    enddata,
+		End_date:    t,
 	}
 	log.Println(newTask.End_date)
 	err := bot.Tasks.Create(newTask)
 
 	if err != nil {
-		log.Printf("Ошибка создания пользователя %v", err)
+		log.Printf("Ошибка создания Task %v", err)
 	}
 	return ctx.Send("Task создана")
 }
@@ -85,12 +83,19 @@ func (bot *UpgradeBot) ShowTasks(ctx telebot.Context) error {
 	tasks, _ := bot.Tasks.AllTask(ctx.Chat().ID)
 
 	for _, task := range tasks {
-		result += task.Task + "\n" + task.Description + "\n" + strconv.Itoa(task.End_date) + "\n"
+		result += task.Task + "\n" + task.Description + "\n" + fmt.Sprintln(task.End_date.Format("2006-01-02 15:04:05")) + "\n"
 	}
 	return ctx.Send(result)
 }
 
-// func (bot *UpgradeBot) TaskDel(ctx telebot.Context) error {
-// 	del := ctx.Args()
-// 	return ctx.Send("удалена")
-// }
+func (bot *UpgradeBot) TaskDel(ctx telebot.Context) error {
+	arg := ctx.Args()
+	taskId, _ := strconv.Atoi(arg[0])
+	fmt.Println(taskId)
+
+	if err := bot.Tasks.DeleteTask(taskId, ctx.Chat().ID); err != nil {
+		log.Fatalf("Ошибка крч %v", err)
+	}
+
+	return ctx.Send("task удалена")
+}

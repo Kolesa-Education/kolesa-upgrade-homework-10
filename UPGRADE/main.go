@@ -43,6 +43,6 @@ func main() {
 	upgradeBot.Bot.Handle("/start", upgradeBot.StartHandler)
 	upgradeBot.Bot.Handle("/addTask", upgradeBot.AddTask)
 	upgradeBot.Bot.Handle("/tasks", upgradeBot.ShowTasks)
-	// upgradeBot.Bot.Handle("/deleteTask {id}",upgradeBot.TaskDel)
+	upgradeBot.Bot.Handle("/deleteTask", upgradeBot.TaskDel)
 	upgradeBot.Bot.Start()
 }
