@@ -1,0 +1,3 @@
+Env="local"
+BotToken="5613567099:AAFiJi0aWGban9c2TFwgRV7hjJtH3r_W9n8"
+Dsn="root:Nugman123456@tcp(localhost:3306)/testBot?parseTime=true"
