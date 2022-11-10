@@ -66,6 +66,7 @@ func (bot *TodoBot) CreateTodoHandler(ctx telebot.Context) error {
 	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
 	if err != nil {
 		log.Printf("Ошибка получения пользователя %v", err)
+		return ctx.Send("Такой пользователь не найден. Может быть ты снова введешь /start ?")
 	}
 
 	newTask := models.Task{
@@ -79,6 +80,7 @@ func (bot *TodoBot) CreateTodoHandler(ctx telebot.Context) error {
 
 	if err != nil {
 		log.Printf("Ошибка создания задачи %v", err)
+		return ctx.Send("Увы, задача не была создана. Попробуй еще раз.")
 	}
 
 	resStr := fmt.Sprintf(
@@ -94,11 +96,13 @@ func (bot *TodoBot) GetAllTodosHandler(ctx telebot.Context) error {
 	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
 	if err != nil {
 		log.Printf("Ошибка получения пользователя %v", err)
+		return ctx.Send("Пользователь не найден. Ты точно регистрировался(-ась) командой /start ?")
 	}
 
 	tasks, err := bot.Tasks.FindAll(existUser.ID)
 	if err != nil {
 		log.Printf("Ошибка получения задач %v", err)
+		return ctx.Send("Не найдено задач по твоему запросу.")
 	}
 
 	var (
@@ -140,11 +144,13 @@ func (bot *TodoBot) DeleteTodoHandler(ctx telebot.Context) error {
 	taskID, err := strconv.Atoi(taskArg[0])
 	if err != nil {
 		log.Printf("Ошибка удаления задачи. Неверный ID %v", err)
+		return ctx.Send("Не получилось удалить задачу. Неверный ID.")
 	}
 
 	err = bot.Tasks.DeleteOne(taskID)
 	if err != nil {
 		log.Printf("Ошибка удаления задачи %v", err)
+		return ctx.Send("Ошибка. Задача не удалена. Попробуй снова.")
 	}
 
 	return ctx.Send(fmt.Sprintf("Задача #%d удалена", taskID))
