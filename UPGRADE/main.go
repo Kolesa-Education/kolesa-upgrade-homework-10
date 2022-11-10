@@ -36,7 +36,7 @@ func main() {
 
 	upgradeBot := bot.UpgradeBot{
 		Bot:   bot.InitBot(cfg.BotToken),
-		Users: &models.UserModel{Db: db},
+		Users: &models.UserModel{Db: db}, 
 		Tasks: &models.TaskModel{Db: db},
 	}
 

@@ -27,11 +27,11 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 		ChatId:     ctx.Chat().ID,
 	}
 
-	existUser, _ := bot.Users.FindOne(ctx.Chat().ID)
+	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
 
-	// if err != nil {
-	// 	log.Printf("Ошибка получения пользователя %v", err)
-	// } поидее это все Katerina писала
+	if err != nil {
+		log.Printf("создай юзера %v", err)
+	} 
 
 	if existUser == nil {
 		err := bot.Users.Create(newUser)
@@ -74,13 +74,18 @@ func (bot *UpgradeBot) AddTask(ctx telebot.Context) error {
 	err := bot.Tasks.Create(newTask)
 
 	if err != nil {
-		log.Printf("Ошибка создания Task %v", err)
+		log.Fatalf("Ошибка создания Task %v", err)
+		return ctx.Send("Task не создана")
 	}
 	return ctx.Send("Task создана")
 }
 func (bot *UpgradeBot) ShowTasks(ctx telebot.Context) error {
 	var result = "Задачки:\n"
-	tasks, _ := bot.Tasks.AllTask(ctx.Chat().ID)
+	tasks, err := bot.Tasks.AllTask(ctx.Chat().ID)
+
+	if err != nil {
+		log.Printf("Ошибка получения задач %v", err)
+	}
 
 	for _, task := range tasks {
 		result += task.Task + "\n" + task.Description + "\n" + fmt.Sprintln(task.End_date.Format("2006-01-02 15:04:05")) + "\n"
@@ -90,8 +95,13 @@ func (bot *UpgradeBot) ShowTasks(ctx telebot.Context) error {
 
 func (bot *UpgradeBot) TaskDel(ctx telebot.Context) error {
 	arg := ctx.Args()
-	taskId, _ := strconv.Atoi(arg[0])
-	fmt.Println(taskId)
+	taskId, err := strconv.Atoi(arg[0])
+
+	if err != nil {
+		//panic(err)
+		log.Fatalf("Ошибка преобразования %v", err)
+		return ctx.Send("Введите число")
+	}
 
 	if err := bot.Tasks.DeleteTask(taskId, ctx.Chat().ID); err != nil {
 		log.Fatalf("Ошибка крч %v", err)
