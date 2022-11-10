@@ -18,8 +18,11 @@ CREATE TABLE tasks
     description character varying(255),
     end_date timestamp without time zone,
     telegram_id integer,
+	user_id integer,
     created_at timestamp without time zone,
     updated_at timestamp without time zone,
     deleted_at timestamp without time zone
+	foreign key (user_id) references users(id)
+		on update cascade
+		on delete restrict
 );
-поидее по хорошему думаю надо было в tasks userId поставить, но с telegram_id тоже ниче так работает

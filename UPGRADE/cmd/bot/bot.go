@@ -31,7 +31,7 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 
 	if err != nil {
 		log.Printf("создай юзера %v", err)
-	} 
+	}
 
 	if existUser == nil {
 		err := bot.Users.Create(newUser)
@@ -74,7 +74,7 @@ func (bot *UpgradeBot) AddTask(ctx telebot.Context) error {
 	err := bot.Tasks.Create(newTask)
 
 	if err != nil {
-		log.Fatalf("Ошибка создания Task %v", err)
+		log.Printf("Ошибка создания Task %v", err)
 		return ctx.Send("Task не создана")
 	}
 	return ctx.Send("Task создана")
@@ -85,6 +85,7 @@ func (bot *UpgradeBot) ShowTasks(ctx telebot.Context) error {
 
 	if err != nil {
 		log.Printf("Ошибка получения задач %v", err)
+		return ctx.Send("Ошибка получения задач")
 	}
 
 	for _, task := range tasks {
@@ -99,12 +100,13 @@ func (bot *UpgradeBot) TaskDel(ctx telebot.Context) error {
 
 	if err != nil {
 		//panic(err)
-		log.Fatalf("Ошибка преобразования %v", err)
+		log.Printf("Ошибка преобразования %v", err)
 		return ctx.Send("Введите число")
 	}
 
 	if err := bot.Tasks.DeleteTask(taskId, ctx.Chat().ID); err != nil {
-		log.Fatalf("Ошибка крч %v", err)
+		log.Printf("Ошибка удаления %v", err)
+		return ctx.Send("Ошибка удаления")
 	}
 
 	return ctx.Send("task удалена")

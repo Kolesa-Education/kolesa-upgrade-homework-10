@@ -20,7 +20,7 @@ type TaskModel struct {
 
 func (m *TaskModel) Create(task Task) error {
 
-	result := m.Db.Create(&task) //nado dobavit' userid
+	result := m.Db.Create(&task)
 
 	return result.Error
 }
