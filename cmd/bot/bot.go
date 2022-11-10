@@ -74,13 +74,14 @@ func (bot *TelegramBot) AddTask(ctx telebot.Context) error {
 
 	if len(task) != 3 {
 		log.Println("Неправильный формат")
-		ctx.Send("Неправильный формат")
+		return ctx.Send("Неправильный формат")
 	}
 
 	err := bot.Tasks.Create(newTask)
 
 	if err != nil {
 		log.Printf("Ошибка при создания задачи %v", err)
+		return ctx.Send("Ошибка при создании задачи")
 	}
 
 	return ctx.Send("Задача " + newTask.Title + " создана")
@@ -116,7 +117,10 @@ func (bot *TelegramBot) DeleteTask(ctx telebot.Context) error {
 		log.Printf("Ошибка при удалении задачи %v", err)
 	}
 
-	err = bot.Tasks.DeleteTask(taskId)
+	if err := bot.Tasks.DeleteTask(taskId); err != nil {
+		log.Printf("Ошибка при удалении %v", err)
+		return ctx.Send("Ошибка при удалении")
+	}
 
 	return ctx.Send("Задача удалена")
 }
