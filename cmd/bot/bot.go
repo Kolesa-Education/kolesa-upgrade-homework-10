@@ -41,7 +41,7 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 		}
 	}
 
-	return ctx.Send("Привет, " + strconv.Itoa(existUser.Id))
+	return ctx.Send("Привет, " + ctx.Sender().FirstName)
 }
 
 func (bot *UpgradeBot) AddTaskHandler(ctx telebot.Context) error {

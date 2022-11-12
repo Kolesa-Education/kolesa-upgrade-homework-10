@@ -12,7 +12,6 @@ type Task struct {
 	Description string         `json:"description"`
 	EndDate     datatypes.Date `json:"end_date"`
 	UserId      int            `gorm:"column:user_id"`
-	// User        *models.UserModel
 }
 
 type TaskModel struct {

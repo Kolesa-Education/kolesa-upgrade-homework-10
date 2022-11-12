@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -10,7 +12,7 @@ type User struct {
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	ChatId     int64  `json:"chat_id"`
-	// Tasks      []*TaskModel `gorm:"foreignKey:UserNumber;references:MemberNumber"`
+	// Tasks      []Task `gorm:"foreignKey:UserId;references:Id"`
 }
 
 type UserModel struct {
