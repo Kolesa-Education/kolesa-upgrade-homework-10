@@ -28,5 +28,6 @@ func main() {
 		log.Fatalf("Ошибка подключения к БД %v", err)
 	}
 
+	//db.Table("tasks", models.Task{}).Col
 	db.AutoMigrate(&models.User{}, &models.Task{})
 }

@@ -35,7 +35,7 @@ func (m *UserModel) FindOne(telegramId int64) (*User, error) {
 
 func (m *UserModel) GetAllTasks() ([]Task, error) {
 	tasks := make([]Task, 0)
-	err := m.Db.Preload("users").Find(&tasks).Error
+	err := m.Db.Preload("tasks").Find(&tasks).Error
 
 	return tasks, err
 }
