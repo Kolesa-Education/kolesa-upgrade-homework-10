@@ -2,12 +2,12 @@ package bot
 
 import (
 	"fmt"
+	"gopkg.in/telebot.v3"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 	"upgrade/internal/models"
-
-	"gopkg.in/telebot.v3"
 )
 
 type UpgradeBot struct {
@@ -26,80 +26,105 @@ func (bot *UpgradeBot) StartHandler(ctx telebot.Context) error {
 	}
 
 	existUser, err := bot.Users.FindOne(ctx.Chat().ID)
-
 	if err != nil {
 		log.Printf("Ошибка получения пользователя %v", err)
 	}
-
 	if existUser == nil {
 		err := bot.Users.Create(newUser)
-
 		if err != nil {
 			log.Printf("Ошибка создания пользователя %v", err)
 		}
 	}
-
-	return ctx.Send("Привет, " + ctx.Sender().FirstName)
+	log.Printf("Бот успешно запущен")
+	return ctx.Send("Привет, " + ctx.Sender().FirstName + "\nЭто бот планировщик задач\n" +
+		"Используй команду /help")
 
 }
 
 func (bot *UpgradeBot) HelpHandler(ctx telebot.Context) error {
-	return ctx.Send("Введи данные о задаче в следующем виде: /addTask Название; Описание; Дедлайн")
+	log.Printf("Исползована команда /help")
+	return ctx.Send("Список доступных комманд:\n\n" +
+		"/new - Добавить новую задачу\n\n" +
+		"/show - Показать список задач\n\n" +
+		"/delete - Удалить задачу")
 }
 
 func (bot *UpgradeBot) NewTaskHandler(ctx telebot.Context) error {
-	attempts := ctx.Args()
-	newTask := models.Task{
-		Title:       attempts[0],
-		Description: attempts[1],
-		EndDate:     attempts[2],
-		TelegramId:  ctx.Chat().ID,
+	log.Printf("Исползована команда /new")
+	text := ctx.Text()
+	if text == "/new" {
+		return ctx.Send("Введи заголовок, описание и дату задачи, " +
+			"разделяя их дефисом. \nНапример: \n" +
+			"/new Купить корм коту-Royal Canin-01.12.2022")
 	}
-	err := bot.Tasks.CreateTask(newTask)
+	newText := strings.Replace(text, "/new ", "", -1)
+	val := strings.Split(newText, "-")
+	if len(val) != 3 {
+		return ctx.Send("Введи заголовок, описание и дату задачи, " +
+			"разделяя их дефисом. \nНапример: \n" +
+			"/new Купить корм коту-Royal Canin-01.12.2022")
+	}
+	date, err := time.Parse("02.01.2006", val[2])
 	if err != nil {
-		log.Printf("Ошибка создания задачи %v", err)
+		log.Printf("Неправильный формат даты %v", err)
+		return ctx.Send("Неправильный формат даты. \nПример: 01.12.2022")
 	}
-	return ctx.Send("Задача успешно добавлена, ")
+	newTask := models.Task{
+		Title:       val[0],
+		Description: val[1],
+		UserID:      ctx.Sender().ID,
+		EndDate:     date,
+	}
+	if err := bot.Tasks.CreateTask(newTask); err != nil {
+		log.Printf("Ошибка добавления задачи %v", err)
+		return ctx.Send("Ошибка добавления задачи")
+	}
+	log.Printf("Новая задача добавлена")
+	return ctx.Send("Новая задача добавлена")
 }
 
 func (bot *UpgradeBot) ShowTaskHandler(ctx telebot.Context) error {
-	users, err := bot.Users.GetAll()
+	log.Printf("Исползована команда /show")
+	tasks, err := bot.Tasks.GetAll(ctx.Sender().ID)
 	if err != nil {
-		return ctx.Send("Error: ", err.Error())
+		log.Fatalf("Ошибка получения списка задач %v", err)
 	}
-	var tasksMsg string
-
-	for _, user := range users {
-		if user.ChatId == ctx.Chat().ID {
-			for _, task := range user.Tasks {
-				tasksMsg += fmt.Sprintf("Title: %v\nDescription: %v\nDeadline: %v\n",
-					task.Title, task.Description, task.EndDate)
-			}
+	var Tasks []string
+	var task string
+	for _, val := range tasks {
+		task = fmt.Sprintf("ID: %v \nЗаголовок: %v \nОписание: %v \nДата: %v",
+			val.ID, val.Title, val.Description, val.EndDate.Format("02.01.2006"))
+		Tasks = append(Tasks, task)
+	}
+	result := strings.Join(Tasks, "\n\n")
+	if result == "" {
+		err = ctx.Send("Список задач пуст")
+		if err != nil {
+			return err
 		}
 	}
-
-	if tasksMsg == "" {
-		return ctx.Send("Задачи не найдены")
-	}
-	return ctx.Send(tasksMsg)
+	return ctx.Send(result)
 }
 
 func (bot *UpgradeBot) DeleteTaskHandler(ctx telebot.Context) error {
-	arg := ctx.Args()
-	if len(arg) == 0 {
-		return ctx.Send("Укажи id задачи")
+	log.Printf("Исползована команда /delete")
+	if ctx.Text() == "/delete" {
+		return ctx.Send("Укажи id задачи для её удаления. \nНапример: \n/delete 2\n" +
+			"Список задач можно посмотреть командой /show")
 	}
-	if len(arg) > 1 {
-		return ctx.Send("Укажи один id задачи")
-	}
-	id, err := strconv.Atoi(arg[0])
+	args := ctx.Args()
+	deleteId, err := strconv.ParseInt(args[0], 0, 64)
 	if err != nil {
-		return ctx.Send("Некорректный id задачи")
+		log.Printf("Ошибка удаления: ID не является целым числом %v", err)
+		return ctx.Send("Ошибка удаления: ID не является целым числом")
 	}
-	err = bot.Tasks.DeleteTask(id)
-	if err != nil {
-		return ctx.Send("Ошибка удаления")
+	if len(args) > 1 {
+		return ctx.Send("Укажи один ID")
 	}
+	if err := bot.Tasks.DeleteTask(deleteId, ctx.Sender().ID); err != nil {
+		log.Fatalf("Ошибка удаления задачи %v", err)
+	}
+	log.Printf("Задача %v успешно удалена ", deleteId)
 	return ctx.Send("Задача успешно удалена")
 }
 

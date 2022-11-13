@@ -5,13 +5,12 @@ import (
 )
 
 type User struct {
-	gorm.Model
-	Name       string `gorm:"primaryKey"`
-	TelegramId int64  `gorm:"column:telegram_id"`
+	ID         uint
+	Name       string `json:"name"`
+	TelegramId int64  `json:"telegram_id"`
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	ChatId     int64  `json:"chat_id"`
-	Tasks      []Task `gorm:"foreignKey:TelegramId;references:TelegramId"`
 }
 
 type UserModel struct {
@@ -30,9 +29,4 @@ func (m *UserModel) FindOne(telegramId int64) (*User, error) {
 		return nil, result.Error
 	}
 	return &existUser, nil
-}
-func (m *UserModel) GetAll() ([]User, error) {
-	var users []User
-	err := m.Db.Model(&User{}).Preload("Tasks").Find(&users).Error
-	return users, err
 }
